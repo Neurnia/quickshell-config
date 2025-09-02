@@ -3,6 +3,7 @@ import qs.services
 import "./components"
 
 PanelWindow {
+    id: root
 
     anchors {
         top: true
@@ -19,6 +20,10 @@ PanelWindow {
     Power {
         id: power
         anchors.right: parent.right
+
+        panel.anchor.window: root
+        panel.anchor.rect.x: root.width - width / 2
+        panel.anchor.rect.y: root.height
     }
 
     Clock {

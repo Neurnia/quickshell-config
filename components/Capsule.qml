@@ -5,8 +5,9 @@ Rectangle {
     property Text content: text
 
     anchors.verticalCenter: parent.verticalCenter
-    height: parent.height * 0.8
+    height: parent.height - 2
     width: content.width + 20
+    antialiasing: true
     radius: height / 2
     color: Colors.palette.m3surfaceVariant
     border.color: "transparent"

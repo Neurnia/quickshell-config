@@ -9,6 +9,7 @@ Row {
         // normal workspaces
         model: Hyprland.workspaces.values.filter(ws => ws.id > 0)
         Capsule {
+            required property HyprlandWorkspace modelData
             content.text: modelData.id
             width: 20
             radius: height / 4
