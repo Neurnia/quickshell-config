@@ -11,7 +11,7 @@ Singleton {
     readonly property real volume: sink?.audio.volume ?? 0
     readonly property bool muted: sink?.audio.muted ?? false
     readonly property int percentage: Math.round(volume * 100)
-    readonly property string icon: muted || percentage === 0 ? "\uf6a9" : percentage < 50 ? "\uf027" : "\uf028"
+    readonly property string icon: muted || percentage === 0 ? "󰝟" : percentage < 50 ? "\uf027" : "\uf028"
 
     signal outputChanged
 
