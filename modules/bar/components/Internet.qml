@@ -79,7 +79,7 @@ Capsule {
                     content.text: ""
                     color: Colors.palette.m3surfaceVariant
 
-                    Text {
+                    AppText {
                         anchors.left: parent.left
                         anchors.leftMargin: 10
                         anchors.right: parent.right
@@ -88,12 +88,11 @@ Capsule {
                         anchors.topMargin: 7
                         text: `${Network.icon}  ${Network.label}${Network.vpnConnected ? "  \uf023" : ""}`
                         color: Colors.palette.m3onSurface
-                        font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 12
                         elide: Text.ElideRight
                     }
 
-                    Text {
+                    AppText {
                         anchors.left: parent.left
                         anchors.leftMargin: 10
                         anchors.right: parent.right
@@ -106,7 +105,6 @@ Capsule {
                             return quality + address;
                         }
                         color: Colors.palette.m3onSurfaceVariant
-                        font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 9
                         elide: Text.ElideRight
                     }

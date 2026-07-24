@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import qs.components
 import qs.services
 
 PanelWindow {
@@ -29,12 +30,11 @@ PanelWindow {
             anchors.rightMargin: 18
             spacing: 14
 
-            Text {
+            AppText {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 26
                 text: Audio.icon
                 color: Colors.palette.m3onSurface
-                font.family: "JetBrainsMono Nerd Font"
                 font.pixelSize: 20
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -60,12 +60,11 @@ PanelWindow {
                 }
             }
 
-            Text {
+            AppText {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 42
                 text: `${Audio.percentage}%`
                 color: Colors.palette.m3onSurface
-                font.family: "JetBrainsMono Nerd Font"
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignRight
             }

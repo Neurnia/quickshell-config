@@ -285,17 +285,16 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 3
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: "\uf293  Bluetooth configuration"
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 16
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: {
                                 if (!BluetoothState.available)
@@ -307,7 +306,6 @@ PanelWindow {
                                 return BluetoothState.connectedCount === 1 ? "\uf00c  1 connected device" : `\uf00c  ${BluetoothState.connectedCount} connected devices`;
                             }
                             color: Colors.palette.m3onSurfaceVariant
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 10
                             elide: Text.ElideRight
                         }
@@ -400,24 +398,22 @@ PanelWindow {
                         width: deviceList.width
                         height: modelData.kind === "header" ? 24 : 52
 
-                        Text {
+                        AppText {
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             visible: itemDelegate.modelData.kind === "header"
                             text: itemDelegate.modelData.kind === "header" ? `${itemDelegate.modelData.icon}  ${itemDelegate.modelData.title}` : ""
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 11
                             font.weight: Font.DemiBold
                         }
 
-                        Text {
+                        AppText {
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             visible: itemDelegate.modelData.kind === "header"
                             text: itemDelegate.modelData.kind === "header" ? itemDelegate.modelData.count : ""
                             color: Colors.palette.m3onSurfaceVariant
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 9
                         }
 
@@ -435,13 +431,12 @@ PanelWindow {
                             color: device?.connected ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
                             border.color: deviceHover.hovered && !BluetoothState.deviceBusy(device) ? Colors.palette.m3outline : "transparent"
 
-                            Text {
+                            AppText {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 12
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: BluetoothState.deviceIcon(deviceRow.device)
                                 color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
-                                font.family: "JetBrainsMono Nerd Font"
                                 font.pixelSize: 16
                             }
 
@@ -453,17 +448,16 @@ PanelWindow {
                                 anchors.verticalCenter: parent.verticalCenter
                                 spacing: 2
 
-                                Text {
+                                AppText {
                                     width: parent.width
                                     text: BluetoothState.deviceName(deviceRow.device)
                                     color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
-                                    font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 11
                                     font.weight: deviceRow.device?.connected ? Font.DemiBold : Font.Normal
                                     elide: Text.ElideRight
                                 }
 
-                                Text {
+                                AppText {
                                     width: parent.width
                                     text: {
                                         if (root.unpairCandidate === deviceRow.device)
@@ -474,7 +468,6 @@ PanelWindow {
                                         return status;
                                     }
                                     color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
-                                    font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 9
                                     elide: Text.ElideRight
                                 }
@@ -572,7 +565,7 @@ PanelWindow {
                         }
                     }
 
-                    Text {
+                    AppText {
                         anchors.centerIn: parent
                         width: parent.width - 40
                         visible: deviceList.count === 0
@@ -586,7 +579,6 @@ PanelWindow {
                             return "\uf293  No Bluetooth devices found";
                         }
                         color: Colors.palette.m3onSurfaceVariant
-                        font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 11
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
@@ -603,43 +595,39 @@ PanelWindow {
                         width: 360
                         spacing: 10
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: BluetoothState.deviceIcon(root.selectedDevice)
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 30
                             horizontalAlignment: Text.AlignHCenter
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: root.selectedDevice ? `Pair with ${BluetoothState.deviceName(root.selectedDevice)}` : ""
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: root.pairingError || root.pairingMessage
                             color: root.pairingError ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 10
                             horizontalAlignment: Text.AlignHCenter
                             wrapMode: Text.WordWrap
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             height: root.pairingCode ? 52 : 0
                             visible: root.pairingCode !== ""
                             text: root.pairingCode
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 28
                             font.weight: Font.DemiBold
                             font.letterSpacing: 3
@@ -667,7 +655,7 @@ PanelWindow {
                                 color: Colors.palette.m3onSurface
                                 selectionColor: Colors.palette.m3secondary
                                 selectedTextColor: Colors.palette.m3onSecondary
-                                font.family: "JetBrainsMono Nerd Font"
+                                font.family: Typography.fontFamily
                                 font.pixelSize: 11
                                 inputMethodHints: Qt.ImhDigitsOnly
                                 selectByMouse: true

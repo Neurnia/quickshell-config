@@ -186,21 +186,19 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 3
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: "\uf1eb  Wi-Fi configuration"
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 16
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: Network.wifiEnabled ? `${Network.icon}  ${Network.label}` : "󰤭  Wi-Fi is off"
                             color: Colors.palette.m3onSurfaceVariant
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 10
                             elide: Text.ElideRight
                         }
@@ -285,27 +283,25 @@ PanelWindow {
                             width: parent.width
                             height: 24
 
-                            Text {
+                            AppText {
                                 anchors.left: parent.left
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: Network.wifiEnabled ? "Available networks" : "Wireless networking disabled"
                                 color: Colors.palette.m3onSurface
-                                font.family: "JetBrainsMono Nerd Font"
                                 font.pixelSize: 11
                             }
 
-                            Text {
+                            AppText {
                                 anchors.right: parent.right
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: Network.wifiEnabled
                                 text: `${Network.networks.length} found`
                                 color: Colors.palette.m3onSurfaceVariant
-                                font.family: "JetBrainsMono Nerd Font"
                                 font.pixelSize: 9
                             }
                         }
 
-                        Text {
+                        AppText {
                             id: listError
 
                             width: parent.width
@@ -313,7 +309,6 @@ PanelWindow {
                             visible: root.errorMessage !== ""
                             text: `\uf071  ${root.errorMessage}`
                             color: Colors.palette.m3error
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 9
                             wrapMode: Text.WordWrap
                             verticalAlignment: Text.AlignVCenter
@@ -342,13 +337,12 @@ PanelWindow {
                                 color: modelData.active ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
                                 border.color: networkHover.hovered && !modelData.active && !Network.busy ? Colors.palette.m3outline : "transparent"
 
-                                Text {
+                                AppText {
                                     anchors.left: parent.left
                                     anchors.leftMargin: 12
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: Network.signalIcon(networkRow.modelData.signal)
                                     color: networkRow.modelData.active ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
-                                    font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 16
                                 }
 
@@ -360,17 +354,16 @@ PanelWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: 2
 
-                                    Text {
+                                    AppText {
                                         width: parent.width
                                         text: networkRow.modelData.name
                                         color: networkRow.modelData.active ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
-                                        font.family: "JetBrainsMono Nerd Font"
                                         font.pixelSize: 11
                                         font.weight: networkRow.modelData.active ? Font.DemiBold : Font.Normal
                                         elide: Text.ElideRight
                                     }
 
-                                    Text {
+                                    AppText {
                                         width: parent.width
                                         text: {
                                             if (Network.connectingName === networkRow.modelData.name)
@@ -386,12 +379,11 @@ PanelWindow {
                                             return "\uf09c  Open network";
                                         }
                                         color: networkRow.modelData.active ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
-                                        font.family: "JetBrainsMono Nerd Font"
                                         font.pixelSize: 9
                                     }
                                 }
 
-                                Text {
+                                AppText {
                                     id: signalLabel
 
                                     anchors.right: parent.right
@@ -399,7 +391,6 @@ PanelWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: `${networkRow.modelData.signal}%`
                                     color: networkRow.modelData.active ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
-                                    font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 10
                                 }
 
@@ -415,13 +406,12 @@ PanelWindow {
                                 }
                             }
 
-                            Text {
+                            AppText {
                                 anchors.centerIn: parent
                                 width: parent.width - 40
                                 visible: networkList.count === 0
                                 text: Network.wifiEnabled ? (Network.busy ? "\uf110  Scanning for networks…" : "󰤭  No networks found") : "\uf1eb  Turn on Wi-Fi from the status panel"
                                 color: Colors.palette.m3onSurfaceVariant
-                                font.family: "JetBrainsMono Nerd Font"
                                 font.pixelSize: 11
                                 horizontalAlignment: Text.AlignHCenter
                                 wrapMode: Text.WordWrap
@@ -437,31 +427,28 @@ PanelWindow {
                         spacing: 10
                         visible: root.selectedNetwork !== null
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: "\uf023"
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 30
                             horizontalAlignment: Text.AlignHCenter
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: root.selectedNetwork ? `Connect to ${root.selectedNetwork.name}` : ""
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: "Enter the network password"
                             color: Colors.palette.m3onSurfaceVariant
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 10
                             horizontalAlignment: Text.AlignHCenter
                         }
@@ -471,11 +458,10 @@ PanelWindow {
                             height: 6
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             text: "Password"
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 10
                         }
 
@@ -499,7 +485,7 @@ PanelWindow {
                                 color: Colors.palette.m3onSurface
                                 selectionColor: Colors.palette.m3secondary
                                 selectedTextColor: Colors.palette.m3onSecondary
-                                font.family: "JetBrainsMono Nerd Font"
+                                font.family: Typography.fontFamily
                                 font.pixelSize: 11
                                 echoMode: root.passwordVisible ? TextInput.Normal : TextInput.Password
                                 passwordCharacter: "•"
@@ -509,7 +495,7 @@ PanelWindow {
                                 onAccepted: root.submitPassword()
                             }
 
-                            Text {
+                            AppText {
                                 id: revealButton
 
                                 anchors.right: parent.right
@@ -517,7 +503,6 @@ PanelWindow {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: root.passwordVisible ? "\uf070" : "\uf06e"
                                 color: Colors.palette.m3onSurfaceVariant
-                                font.family: "JetBrainsMono Nerd Font"
                                 font.pixelSize: 12
 
                                 MouseArea {
@@ -533,7 +518,7 @@ PanelWindow {
                             }
                         }
 
-                        Text {
+                        AppText {
                             width: parent.width
                             height: 36
                             text: {
@@ -544,7 +529,6 @@ PanelWindow {
                                 return "Use at least 8 characters for WPA/WPA2/WPA3.";
                             }
                             color: root.errorMessage ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 9
                             wrapMode: Text.WordWrap
                             verticalAlignment: Text.AlignVCenter

@@ -254,18 +254,16 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 2
 
-                        Text {
+                        AppText {
                             text: "\uf011  Session"
                             color: Colors.palette.m3onSurface
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 16
                             font.weight: Font.DemiBold
                         }
 
-                        Text {
+                        AppText {
                             text: "Arrow keys to navigate  ·  Esc to cancel"
                             color: Colors.palette.m3onSurfaceVariant
-                            font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 9
                         }
                     }
@@ -385,30 +383,27 @@ PanelWindow {
                                 anchors.centerIn: parent
                                 spacing: 5
 
-                                Text {
+                                AppText {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: actionButton.modelData.icon
                                     color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding)
                                         ? Colors.palette.m3error
                                         : Colors.palette.m3onSurface
-                                    font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 22
                                 }
 
-                                Text {
+                                AppText {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: actionButton.modelData.label
                                     color: Colors.palette.m3onSurface
-                                    font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 11
                                     font.weight: Font.DemiBold
                                 }
 
-                                Text {
+                                AppText {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: actionButton.modelData.dangerous ? "Hold to confirm" : actionButton.modelData.description
                                     color: Colors.palette.m3onSurfaceVariant
-                                    font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 8
                                 }
                             }
@@ -543,7 +538,7 @@ PanelWindow {
                     width: parent.width
                     height: 22
 
-                    Text {
+                    AppText {
                         anchors.centerIn: parent
                         text: {
                             if (root.showHoldHint)
@@ -557,7 +552,6 @@ PanelWindow {
                             return "\uf25a  Hold Restart or Shut down for 1.2 seconds";
                         }
                         color: root.showHoldHint ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
-                        font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 9
                     }
                 }

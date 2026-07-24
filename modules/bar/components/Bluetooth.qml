@@ -79,7 +79,7 @@ Capsule {
                     content.text: ""
                     color: Colors.palette.m3surfaceVariant
 
-                    Text {
+                    AppText {
                         anchors.left: parent.left
                         anchors.leftMargin: 10
                         anchors.right: parent.right
@@ -88,12 +88,11 @@ Capsule {
                         anchors.topMargin: 7
                         text: `${BluetoothState.icon}  ${BluetoothState.label}`
                         color: Colors.palette.m3onSurface
-                        font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 12
                         elide: Text.ElideRight
                     }
 
-                    Text {
+                    AppText {
                         anchors.left: parent.left
                         anchors.leftMargin: 10
                         anchors.right: parent.right
@@ -110,7 +109,6 @@ Capsule {
                             return BluetoothState.connectedCount === 1 ? "1 connected device" : `${BluetoothState.connectedCount} connected devices`;
                         }
                         color: Colors.palette.m3onSurfaceVariant
-                        font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 9
                         elide: Text.ElideRight
                     }
