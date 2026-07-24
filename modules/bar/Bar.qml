@@ -7,6 +7,7 @@ PanelWindow {
 
     signal wifiConfigRequested
     signal bluetoothConfigRequested
+    signal powerMenuRequested
 
     anchors {
         top: true
@@ -23,10 +24,7 @@ PanelWindow {
     Power {
         id: power
         anchors.right: parent.right
-
-        panel.anchor.window: root
-        panel.anchor.rect.x: root.width - width / 2
-        panel.anchor.rect.y: root.height
+        onMenuRequested: root.powerMenuRequested()
     }
 
     Clock {
