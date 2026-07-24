@@ -3,38 +3,29 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import qs.components
 import qs.services
 
-PanelWindow {
+OverlayDialog {
     id: root
 
-    property bool shown: false
     property var selectedNetwork: null
     property string errorMessage: ""
     property bool passwordVisible: false
     property bool passwordAcceptable: false
 
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
+    layerNamespace: "quickshell:wifi-config"
+    onDismissRequested: root.close()
+    onEscapePressed: {
+        if (root.selectedNetwork)
+            root.showNetworkList();
+        else
+            root.close();
     }
-    visible: shown
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-
-    WlrLayershell.namespace: "quickshell:wifi-config"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.exclusiveZone: -1
-    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     function open(): void {
         resetAuthentication();
         shown = true;
-        focusScope.forceActiveFocus();
         if (Network.wifiEnabled)
             Network.rescan();
     }
@@ -58,7 +49,7 @@ PanelWindow {
         if (Network.actionPurpose === "credentials")
             Network.cancelCredentialConnection();
         resetAuthentication();
-        focusScope.forceActiveFocus();
+        takeFocus();
     }
 
     function chooseNetwork(network): void {
@@ -129,51 +120,10 @@ PanelWindow {
         }
     }
 
-    FocusScope {
-        id: focusScope
-
+    Column {
         anchors.fill: parent
-        focus: root.shown
-
-        Keys.onEscapePressed: event => {
-            if (root.selectedNetwork)
-                root.showNetworkList();
-            else
-                root.close();
-            event.accepted = true;
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "#B8000000"
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                onClicked: root.close()
-            }
-        }
-
-        Capsule {
-            id: card
-
-            anchors.centerIn: parent
-            width: 440
-            height: 500
-            radius: 16
-            color: Colors.palette.m3surfaceContainerLowest
-            border.color: Colors.palette.m3outlineVariant
-            content.text: ""
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-            }
-
-            Column {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 10
+        anchors.margins: 12
+        spacing: 10
 
                 Item {
                     width: parent.width
@@ -588,7 +538,5 @@ PanelWindow {
                         }
                     }
                 }
-            }
-        }
     }
 }
