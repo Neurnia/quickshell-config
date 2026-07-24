@@ -161,50 +161,29 @@ OverlayDialog {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 6
 
-                        Capsule {
-                            id: scanButton
+                    ActionCapsule {
+                        id: scanButton
 
-                            anchors.verticalCenter: undefined
-                            width: 82
+                        actionEnabled: Network.wifiEnabled && !Network.busy
+                        anchors.verticalCenter: undefined
+                        width: 82
                             height: 30
-                            radius: height * 0.2
-                            content.text: Network.busy ? "\uf110  Wait" : "\uf2f1  Scan"
-                            color: Colors.palette.m3surfaceVariant
-                            border.color: scanHover.hovered && Network.wifiEnabled && !Network.busy ? Colors.palette.m3outline : "transparent"
+                        radius: height * 0.2
+                        content.text: Network.busy ? "\uf110  Wait" : "\uf2f1  Scan"
+                        color: Colors.palette.m3surfaceVariant
+                        onClicked: Network.rescan()
+                    }
 
-                            HoverHandler {
-                                id: scanHover
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: Network.wifiEnabled && !Network.busy ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: Network.rescan()
-                            }
-                        }
-
-                        Capsule {
-                            id: closeButton
+                    ActionCapsule {
+                        id: closeButton
 
                             anchors.verticalCenter: undefined
                             width: 30
                             height: 30
-                            radius: height * 0.2
-                            content.text: "\uf00d"
-                            color: Colors.palette.m3surfaceVariant
-                            border.color: closeHover.hovered ? Colors.palette.m3outline : "transparent"
-
-                            HoverHandler {
-                                id: closeHover
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.close()
-                            }
+                        radius: height * 0.2
+                        content.text: "\uf00d"
+                        color: Colors.palette.m3surfaceVariant
+                        onClicked: root.close()
                         }
                     }
                 }
@@ -274,18 +253,18 @@ OverlayDialog {
                             boundsBehavior: Flickable.StopAtBounds
                             model: Network.wifiEnabled ? Network.networks : []
 
-                            delegate: Capsule {
-                                id: networkRow
+                        delegate: ActionCapsule {
+                            id: networkRow
 
-                                required property var modelData
+                            required property var modelData
 
-                                anchors.verticalCenter: undefined
+                            actionEnabled: !modelData.active && !Network.busy
+                            anchors.verticalCenter: undefined
                                 width: networkList.width
                                 height: 50
                                 radius: height * 0.16
-                                content.text: ""
-                                color: modelData.active ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                                border.color: networkHover.hovered && !modelData.active && !Network.busy ? Colors.palette.m3outline : "transparent"
+                            content.text: ""
+                            color: modelData.active ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
 
                                 AppText {
                                     anchors.left: parent.left
@@ -344,16 +323,7 @@ OverlayDialog {
                                     font.pixelSize: 10
                                 }
 
-                                HoverHandler {
-                                    id: networkHover
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton
-                                    cursorShape: !networkRow.modelData.active && !Network.busy ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: root.chooseNetwork(networkRow.modelData)
-                                }
+                            onClicked: root.chooseNetwork(networkRow.modelData)
                             }
 
                             AppText {
@@ -489,51 +459,30 @@ OverlayDialog {
                             height: 34
                             spacing: 8
 
-                            Capsule {
-                                id: backButton
+                    ActionCapsule {
+                        id: backButton
 
                                 anchors.verticalCenter: undefined
                                 width: (parent.width - parent.spacing) / 2
                                 height: parent.height
-                                radius: height * 0.2
-                                content.text: "\uf060  Back"
-                                color: Colors.palette.m3surfaceVariant
-                                border.color: backHover.hovered ? Colors.palette.m3outline : "transparent"
+                        radius: height * 0.2
+                        content.text: "\uf060  Back"
+                        color: Colors.palette.m3surfaceVariant
+                        onClicked: root.showNetworkList()
+                    }
 
-                                HoverHandler {
-                                    id: backHover
-                                }
+                    ActionCapsule {
+                        id: connectButton
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.showNetworkList()
-                                }
-                            }
-
-                            Capsule {
-                                id: connectButton
-
-                                anchors.verticalCenter: undefined
+                        actionEnabled: root.passwordAcceptable && !Network.busy
+                        anchors.verticalCenter: undefined
                                 width: (parent.width - parent.spacing) / 2
                                 height: parent.height
                                 radius: height * 0.2
-                                content.text: Network.busy ? "\uf110  Connecting" : "\uf00c  Connect"
-                                color: root.passwordAcceptable && !Network.busy ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                                content.color: root.passwordAcceptable && !Network.busy ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
-                                border.color: connectHover.hovered && root.passwordAcceptable && !Network.busy ? Colors.palette.m3outline : "transparent"
-
-                                HoverHandler {
-                                    id: connectHover
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton
-                                    cursorShape: root.passwordAcceptable && !Network.busy ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: root.submitPassword()
-                                }
+                        content.text: Network.busy ? "\uf110  Connecting" : "\uf00c  Connect"
+                        color: root.passwordAcceptable && !Network.busy ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
+                        content.color: root.passwordAcceptable && !Network.busy ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
+                        onClicked: root.submitPassword()
                             }
                         }
                     }
