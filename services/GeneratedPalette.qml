@@ -8,10 +8,18 @@ Singleton {
     id: root
 
     readonly property string path: Quickshell.cachePath("palette.json")
-    readonly property Palette colors: paletteAdapter.colors
+    readonly property var colors: paletteAdapter.colors
     readonly property string mode: paletteAdapter.mode
     readonly property string seed: paletteAdapter.seed
-    readonly property var requiredRoles: ["primary", "onPrimary", "primaryContainer", "onPrimaryContainer", "secondary", "onSecondary", "secondaryContainer", "onSecondaryContainer", "tertiary", "onTertiary", "tertiaryContainer", "onTertiaryContainer", "error", "onError", "errorContainer", "onErrorContainer", "background", "onBackground", "surface", "onSurface", "surfaceVariant", "onSurfaceVariant", "outline", "outlineVariant", "shadow", "scrim", "inverseSurface", "inverseOnSurface", "inversePrimary", "primaryFixed", "onPrimaryFixed", "primaryFixedDim", "onPrimaryFixedVariant", "secondaryFixed", "onSecondaryFixed", "secondaryFixedDim", "onSecondaryFixedVariant", "tertiaryFixed", "onTertiaryFixed", "tertiaryFixedDim", "onTertiaryFixedVariant", "surfaceDim", "surfaceBright", "surfaceContainerLowest", "surfaceContainerLow", "surfaceContainer", "surfaceContainerHigh", "surfaceContainerHighest"]
+    readonly property var requiredRoles: ["primary", "onPrimary", "primaryContainer", "onPrimaryContainer", "secondary",
+        "onSecondary", "secondaryContainer", "onSecondaryContainer", "tertiary", "onTertiary", "tertiaryContainer",
+        "onTertiaryContainer", "error", "onError", "errorContainer", "onErrorContainer", "background", "onBackground",
+        "surface", "onSurface", "surfaceVariant", "onSurfaceVariant", "outline", "outlineVariant", "shadow", "scrim",
+        "inverseSurface", "inverseOnSurface", "inversePrimary", "primaryFixed", "onPrimaryFixed", "primaryFixedDim",
+        "onPrimaryFixedVariant", "secondaryFixed", "onSecondaryFixed", "secondaryFixedDim", "onSecondaryFixedVariant",
+        "tertiaryFixed", "onTertiaryFixed", "tertiaryFixedDim", "onTertiaryFixedVariant", "surfaceDim", "surfaceBright",
+        "surfaceContainerLowest", "surfaceContainerLow", "surfaceContainer", "surfaceContainerHigh",
+        "surfaceContainerHighest"]
 
     property bool available: false
     property string errorMessage: "Generated palette has not been loaded"
@@ -70,7 +78,7 @@ Singleton {
             property int version: 0
             property string mode: ""
             property string seed: ""
-            property Palette colors: Palette {}
+            property var colors: ({})
         }
     }
 }
