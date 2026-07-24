@@ -23,7 +23,14 @@ Singleton {
     property bool refreshing: false
     property bool busy: false
     property string actionName: ""
+    property string actionPurpose: ""
+    property string connectingName: ""
+    property string runnerError: ""
+    property string pendingPassword: ""
     property int pendingReads: 0
+
+    signal connectionSucceeded(string name)
+    signal connectionFailed(string name, string message)
 
     readonly property string icon: {
         if (connectionType === "ethernet")
@@ -94,6 +101,8 @@ Singleton {
 
         busy = true;
         actionName = wifiEnabled ? "Turning Wi-Fi off" : "Turning Wi-Fi on";
+        actionPurpose = "toggle";
+        runnerError = "";
         actionRunner.exec(["nmcli", "radio", "wifi", wifiEnabled ? "off" : "on"]);
     }
 
@@ -103,6 +112,8 @@ Singleton {
 
         busy = true;
         actionName = "Scanning";
+        actionPurpose = "scan";
+        runnerError = "";
         actionRunner.exec(["nmcli", "device", "wifi", "rescan"]);
     }
 
@@ -116,10 +127,37 @@ Singleton {
 
         busy = true;
         actionName = `Connecting to ${network.name}`;
+        actionPurpose = "connect";
+        connectingName = network.name;
+        runnerError = "";
         if (network.saved)
             actionRunner.exec(["nmcli", "connection", "up", "id", network.name]);
         else
             actionRunner.exec(["nmcli", "device", "wifi", "connect", network.name]);
+    }
+
+    function connectWithPassword(network, password: string): void {
+        if (busy || !network || !network.secured || network.saved || network.enterprise || !password)
+            return;
+
+        busy = true;
+        actionName = `Connecting to ${network.name}`;
+        actionPurpose = "credentials";
+        connectingName = network.name;
+        runnerError = "";
+        pendingPassword = password;
+        credentialRunner.exec(["nmcli", "--ask", "device", "wifi", "connect", network.name]);
+    }
+
+    function cancelCredentialConnection(): void {
+        pendingPassword = "";
+        if (credentialRunner.running)
+            credentialRunner.signal(15);
+    }
+
+    function friendlyError(message: string): string {
+        const cleaned = message.trim().replace(/^Error:\s*/i, "");
+        return cleaned || "The connection could not be completed.";
     }
 
     function parseStatus(output: string): void {
@@ -199,6 +237,7 @@ Singleton {
                 signal: Number(fields[2]) || 0,
                 security: fields[3] || "",
                 secured: Boolean(fields[3]),
+                enterprise: (fields[3] || "").toUpperCase().indexOf("802.1X") !== -1,
                 saved: savedNetworks.indexOf(name) !== -1
             };
             const existing = strongestByName[name];
@@ -235,6 +274,7 @@ Singleton {
             signal: network.signal,
             security: network.security,
             secured: network.secured,
+            enterprise: network.enterprise,
             saved: names.indexOf(network.name) !== -1
         })));
     }
@@ -295,9 +335,64 @@ Singleton {
 
     Process {
         id: actionRunner
-        onExited: {
+
+        stderr: StdioCollector {
+            onStreamFinished: root.runnerError = text.trim()
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            const purpose = root.actionPurpose;
+            const targetName = root.connectingName;
+            const errorMessage = root.friendlyError(root.runnerError);
+
             root.busy = false;
             root.actionName = "";
+            root.actionPurpose = "";
+            root.connectingName = "";
+            root.runnerError = "";
+
+            if (purpose === "connect") {
+                if (exitCode === 0)
+                    root.connectionSucceeded(targetName);
+                else
+                    root.connectionFailed(targetName, errorMessage);
+            }
+
+            actionRefresh.restart();
+        }
+    }
+
+    Process {
+        id: credentialRunner
+
+        stdinEnabled: true
+
+        stdout: StdioCollector {}
+        stderr: StdioCollector {
+            onStreamFinished: root.runnerError = text.trim()
+        }
+
+        onStarted: {
+            credentialRunner.write(root.pendingPassword + "\n");
+            root.pendingPassword = "";
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            const targetName = root.connectingName;
+            const errorMessage = root.friendlyError(root.runnerError);
+
+            root.pendingPassword = "";
+            root.busy = false;
+            root.actionName = "";
+            root.actionPurpose = "";
+            root.connectingName = "";
+            root.runnerError = "";
+
+            if (exitCode === 0)
+                root.connectionSucceeded(targetName);
+            else
+                root.connectionFailed(targetName, errorMessage);
+
             actionRefresh.restart();
         }
     }
