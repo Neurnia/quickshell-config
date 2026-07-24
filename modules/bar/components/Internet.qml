@@ -181,7 +181,7 @@ Capsule {
                     height: 18
                     leftPadding: 6
                     verticalAlignment: Text.AlignVCenter
-                    text: Network.wifiEnabled ? "Nearby networks" : "Wi-Fi is off"
+                    text: Network.wifiEnabled ? "Known & nearby networks" : "Wi-Fi is off"
                     color: Colors.palette.m3onSurfaceVariant
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 10
@@ -209,7 +209,10 @@ Capsule {
                             anchors.right: strengthLabel.left
                             anchors.rightMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            text: `${root.signalIcon(networkRow.modelData.signal)}  ${networkRow.modelData.name}${networkRow.modelData.secured ? "  \uf023" : ""}`
+                            text: {
+                                const credentialIcon = networkRow.modelData.saved ? "\uf084" : networkRow.modelData.secured ? "\uf023" : "";
+                                return `${root.signalIcon(networkRow.modelData.signal)}  ${networkRow.modelData.name}${credentialIcon ? `  ${credentialIcon}` : ""}`;
+                            }
                             color: networkRow.modelData.active ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
                             font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 10

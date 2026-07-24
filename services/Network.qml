@@ -170,6 +170,17 @@ Singleton {
         }
     }
 
+    function sortNetworks(networkList): var {
+        networkList.sort((left, right) => {
+            if (left.active !== right.active)
+                return left.active ? -1 : 1;
+            if (left.saved !== right.saved)
+                return left.saved ? -1 : 1;
+            return right.signal - left.signal;
+        });
+        return networkList;
+    }
+
     function parseWifi(output: string): void {
         const strongestByName = {};
 
@@ -196,12 +207,7 @@ Singleton {
         }
 
         const result = Object.keys(strongestByName).map(name => strongestByName[name]);
-        result.sort((left, right) => {
-            if (left.active !== right.active)
-                return left.active ? -1 : 1;
-            return right.signal - left.signal;
-        });
-        networks = result;
+        networks = sortNetworks(result);
 
         const active = result.find(network => network.active);
         if (active) {
@@ -223,14 +229,14 @@ Singleton {
         }
 
         savedNetworks = names;
-        networks = networks.map(network => ({
+        networks = sortNetworks(networks.map(network => ({
             active: network.active,
             name: network.name,
             signal: network.signal,
             security: network.security,
             secured: network.secured,
             saved: names.indexOf(network.name) !== -1
-        }));
+        })));
     }
 
     Process {
