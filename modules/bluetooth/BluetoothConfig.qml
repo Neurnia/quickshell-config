@@ -19,6 +19,7 @@ PanelWindow {
     property string pairingOutputBuffer: ""
     property int pairingStdoutLength: 0
     property int pairingStderrLength: 0
+    property var unpairCandidate: null
 
     anchors {
         top: true
@@ -44,6 +45,8 @@ PanelWindow {
 
     function close(): void {
         shown = false;
+        unpairCandidate = null;
+        unpairReset.stop();
         cancelPairing();
         BluetoothState.stopDiscovery();
     }
@@ -146,6 +149,21 @@ PanelWindow {
             answerPairing(answer);
     }
 
+    function requestUnpair(device): void {
+        if (!device || BluetoothState.deviceBusy(device))
+            return;
+
+        if (unpairCandidate === device) {
+            unpairCandidate = null;
+            unpairReset.stop();
+            BluetoothState.forgetDevice(device);
+            return;
+        }
+
+        unpairCandidate = device;
+        unpairReset.restart();
+    }
+
     IpcHandler {
         target: "bluetoothConfig"
 
@@ -201,6 +219,13 @@ PanelWindow {
                 root.pairingError = "Pairing was cancelled or could not be completed.";
             }
         }
+    }
+
+    Timer {
+        id: unpairReset
+
+        interval: 4000
+        onTriggered: root.unpairCandidate = null
     }
 
     FocusScope {
@@ -423,7 +448,7 @@ PanelWindow {
                             Column {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 42
-                                anchors.right: deviceAction.left
+                                anchors.right: deviceActions.left
                                 anchors.rightMargin: 10
                                 anchors.verticalCenter: parent.verticalCenter
                                 spacing: 2
@@ -441,6 +466,8 @@ PanelWindow {
                                 Text {
                                     width: parent.width
                                     text: {
+                                        if (root.unpairCandidate === deviceRow.device)
+                                            return "Click the check to unpair";
                                         const status = BluetoothState.deviceStatus(deviceRow.device);
                                         if (deviceRow.device?.batteryAvailable)
                                             return `${status}  ·  \uf240 ${Math.round(deviceRow.device.battery * 100)}%`;
@@ -453,38 +480,94 @@ PanelWindow {
                                 }
                             }
 
-                            Text {
-                                id: deviceAction
-
-                                anchors.right: parent.right
-                                anchors.rightMargin: 12
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: {
-                                    if (BluetoothState.deviceBusy(deviceRow.device))
-                                        return "\uf110";
-                                    if (deviceRow.device?.connected)
-                                        return "\uf127";
-                                    return "\uf0c1";
-                                }
-                                color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
-                                font.family: "JetBrainsMono Nerd Font"
-                                font.pixelSize: 13
-                            }
-
-                            HoverHandler {
-                                id: deviceHover
-                            }
-
                             MouseArea {
                                 anchors.fill: parent
                                 acceptedButtons: Qt.LeftButton
                                 cursorShape: !BluetoothState.deviceBusy(deviceRow.device) ? Qt.PointingHandCursor : Qt.ArrowCursor
                                 onClicked: {
+                                    root.unpairCandidate = null;
                                     if (BluetoothState.isKnown(deviceRow.device))
                                         BluetoothState.toggleDevice(deviceRow.device);
                                     else
                                         root.beginPairing(deviceRow.device);
                                 }
+                            }
+
+                            Row {
+                                id: deviceActions
+
+                                anchors.right: parent.right
+                                anchors.rightMargin: 8
+                                anchors.verticalCenter: parent.verticalCenter
+                                height: 28
+                                spacing: 4
+
+                                Capsule {
+                                    id: connectionButton
+
+                                    anchors.verticalCenter: undefined
+                                    width: 28
+                                    height: 28
+                                    radius: height * 0.22
+                                    content.text: {
+                                        if (BluetoothState.deviceBusy(deviceRow.device))
+                                            return "\uf110";
+                                        if (deviceRow.device?.connected)
+                                            return "\uf127";
+                                        return "\uf0c1";
+                                    }
+                                    color: "transparent"
+                                    content.color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
+                                    border.color: connectionHover.hovered && !BluetoothState.deviceBusy(deviceRow.device) ? Colors.palette.m3outline : "transparent"
+
+                                    HoverHandler {
+                                        id: connectionHover
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.LeftButton
+                                        cursorShape: !BluetoothState.deviceBusy(deviceRow.device) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                        onClicked: {
+                                            root.unpairCandidate = null;
+                                            if (BluetoothState.isKnown(deviceRow.device))
+                                                BluetoothState.toggleDevice(deviceRow.device);
+                                            else
+                                                root.beginPairing(deviceRow.device);
+                                        }
+                                    }
+                                }
+
+                                Capsule {
+                                    id: unpairButton
+
+                                    readonly property bool confirming: root.unpairCandidate === deviceRow.device
+
+                                    anchors.verticalCenter: undefined
+                                    width: visible ? 28 : 0
+                                    height: 28
+                                    visible: BluetoothState.isKnown(deviceRow.device)
+                                    radius: height * 0.22
+                                    content.text: confirming ? "\uf00c" : "\uf1f8"
+                                    color: confirming ? Colors.palette.m3error : "transparent"
+                                    content.color: confirming ? Colors.palette.m3onError : (deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant)
+                                    border.color: unpairHover.hovered && !BluetoothState.deviceBusy(deviceRow.device) ? Colors.palette.m3outline : "transparent"
+
+                                    HoverHandler {
+                                        id: unpairHover
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.LeftButton
+                                        cursorShape: !BluetoothState.deviceBusy(deviceRow.device) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                        onClicked: root.requestUnpair(deviceRow.device)
+                                    }
+                                }
+                            }
+
+                            HoverHandler {
+                                id: deviceHover
                             }
                         }
                     }

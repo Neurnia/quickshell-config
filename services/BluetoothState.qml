@@ -145,6 +145,11 @@ Singleton {
         // New devices are paired by BluetoothConfig's interactive BlueZ agent.
     }
 
+    function forgetDevice(device): void {
+        if (device && isKnown(device) && !deviceBusy(device))
+            device.forget();
+    }
+
     function toggleEnabled(): void {
         if (adapter)
             adapter.enabled = !adapter.enabled;
