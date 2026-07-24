@@ -45,8 +45,13 @@ PanelWindow {
     }
 
     Internet {
+        id: internet
         anchors.right: brightness.left
         anchors.rightMargin: 5
+
+        panel.anchor.window: root
+        panel.anchor.rect.x: internet.x + internet.width / 2
+        panel.anchor.rect.y: root.height
     }
 
     Workspaces {
