@@ -63,6 +63,11 @@ PanelWindow {
         onConfigRequested: root.wifiConfigRequested()
     }
 
+    Bluetooth {
+        anchors.right: internet.left
+        anchors.rightMargin: 5
+    }
+
     Workspaces {
         height: parent.height
         anchors.left: parent.left
