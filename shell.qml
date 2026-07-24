@@ -1,9 +1,15 @@
 import "modules/bar"
+import "modules/network"
 import "modules/osd"
 
 import Quickshell
 
 ShellRoot {
-    Bar {}
+    Bar {
+        onWifiConfigRequested: wifiConfig.open()
+    }
+    WifiConfig {
+        id: wifiConfig
+    }
     VolumeOsd {}
 }

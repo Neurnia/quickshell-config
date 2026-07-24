@@ -5,6 +5,8 @@ import "./components"
 PanelWindow {
     id: root
 
+    signal wifiConfigRequested
+
     anchors {
         top: true
         left: true
@@ -52,6 +54,7 @@ PanelWindow {
         panel.anchor.window: root
         panel.anchor.rect.x: internet.x + internet.width / 2
         panel.anchor.rect.y: root.height
+        onConfigRequested: root.wifiConfigRequested()
     }
 
     Workspaces {
