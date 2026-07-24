@@ -5,11 +5,7 @@ StatusPopover {
     statusIcon: Network.icon
     statusText: `${Network.label}${Network.vpnConnected ? " \uf023" : ""}`
     details: {
-        const quality = Network.connectionType === "wifi"
-            ? `${Network.signalStrength}%`
-            : Network.connectionType === "ethernet"
-                ? "Wired connection"
-                : "No connection";
+        const quality = Network.connectionType === "wifi" ? `${Network.signalStrength}%` : Network.connectionType === "ethernet" ? "Wired connection" : "No connection";
         const address = Network.ipAddress ? `  ·  ${Network.ipAddress}` : "";
         return quality + address;
     }

@@ -11,9 +11,7 @@ StatusPopover {
             return "Wireless devices unavailable";
         if (BluetoothState.connectedCount === 0)
             return "No connected devices";
-        return BluetoothState.connectedCount === 1
-            ? "1 connected device"
-            : `${BluetoothState.connectedCount} connected devices`;
+        return BluetoothState.connectedCount === 1 ? "1 connected device" : `${BluetoothState.connectedCount} connected devices`;
     }
     toggleIcon: "\uf293"
     toggleText: `Bluetooth ${BluetoothState.enabled ? "on" : "off"}`

@@ -194,295 +194,290 @@ OverlayDialog {
         anchors.margins: 12
         spacing: 10
 
-                Item {
-                    width: parent.width
-                    height: 44
+        Item {
+            width: parent.width
+            height: 44
+
+            Column {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+
+                AppText {
+                    text: "\uf011  Session"
+                    color: Colors.palette.m3onSurface
+                    font.pixelSize: 16
+                    font.weight: Font.DemiBold
+                }
+
+                AppText {
+                    text: "Arrow keys to navigate  ·  Esc to cancel"
+                    color: Colors.palette.m3onSurfaceVariant
+                    font.pixelSize: 9
+                }
+            }
+
+            ActionCapsule {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                width: 30
+                height: 30
+                radius: height * 0.2
+                content.text: "\uf00d"
+                color: Colors.palette.m3surfaceVariant
+                onClicked: root.close()
+            }
+        }
+
+        Rectangle {
+            width: parent.width
+            height: 1
+            color: Colors.palette.m3outlineVariant
+            opacity: 0.35
+        }
+
+        Grid {
+            id: actionGrid
+
+            width: parent.width
+            height: 172
+            columns: 2
+            spacing: 8
+
+            Repeater {
+                model: SessionActions.actions
+
+                ActionCapsule {
+                    id: actionButton
+
+                    required property var modelData
+                    required property int index
+
+                    readonly property bool selected: root.selectedIndex === index
+                    readonly property bool holding: root.holdingIndex === index || root.completingIndex === index
+                    readonly property bool activelyHolding: root.holdingIndex === index
+                    property real holdOffset: activelyHolding ? 1 : 0
+                    property real holdScale: activelyHolding ? 0.985 : 1
+                    property real feedbackOffset: 0
+                    property real feedbackScale: 1
+                    readonly property color actionColor: modelData.id === "shutdown" ? Colors.palette.m3errorContainer : Colors.palette.m3tertiaryContainer
+
+                    anchors.verticalCenter: undefined
+                    width: (actionGrid.width - actionGrid.spacing) / 2
+                    height: 82
+                    radius: 10
+                    clip: true
+                    content.text: ""
+                    color: Colors.palette.m3surfaceVariant
+                    border.width: selected ? 2 : 1
+                    border.color: selected ? Colors.palette.m3outline : "transparent"
+                    onHoveredChanged: {
+                        if (hovered)
+                            root.selectedIndex = actionButton.index;
+                    }
+                    onPressed: {
+                        if (actionButton.modelData.dangerous)
+                            root.beginAction(actionButton.index);
+                    }
+                    onClicked: {
+                        if (!actionButton.modelData.dangerous)
+                            root.beginAction(actionButton.index);
+                    }
+                    onReleased: {
+                        if (root.holdingIndex === actionButton.index)
+                            root.cancelHold(true);
+                    }
+                    onCanceled: {
+                        if (root.holdingIndex === actionButton.index)
+                            root.cancelHold(false);
+                    }
+                    transform: [
+                        Translate {
+                            y: actionButton.holdOffset + actionButton.feedbackOffset
+                        },
+                        Scale {
+                            origin.x: actionButton.width / 2
+                            origin.y: actionButton.height / 2
+                            xScale: actionButton.holdScale * actionButton.feedbackScale
+                            yScale: actionButton.holdScale * actionButton.feedbackScale
+                        }
+                    ]
+
+                    Behavior on holdOffset {
+                        NumberAnimation {
+                            duration: 90
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Behavior on holdScale {
+                        NumberAnimation {
+                            duration: 90
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Item {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: actionButton.holding ? parent.width * root.holdProgress : 0
+                        clip: true
+
+                        Rectangle {
+                            id: progressFill
+
+                            width: actionButton.width
+                            height: actionButton.height
+                            radius: actionButton.radius
+                            color: actionButton.actionColor
+                            opacity: 0.82
+                        }
+                    }
 
                     Column {
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2
+                        anchors.centerIn: parent
+                        spacing: 5
 
                         AppText {
-                            text: "\uf011  Session"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: actionButton.modelData.icon
+                            color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding) ? Colors.palette.m3error : Colors.palette.m3onSurface
+                            font.pixelSize: 22
+                        }
+
+                        AppText {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: actionButton.modelData.label
                             color: Colors.palette.m3onSurface
-                            font.pixelSize: 16
+                            font.pixelSize: 11
                             font.weight: Font.DemiBold
                         }
 
                         AppText {
-                            text: "Arrow keys to navigate  ·  Esc to cancel"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: actionButton.modelData.dangerous ? "Hold to confirm" : actionButton.modelData.description
                             color: Colors.palette.m3onSurfaceVariant
-                            font.pixelSize: 9
+                            font.pixelSize: 8
                         }
                     }
 
-                    ActionCapsule {
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 30
-                        height: 30
-                        radius: height * 0.2
-                        content.text: "\uf00d"
-                        color: Colors.palette.m3surfaceVariant
-                        onClicked: root.close()
+                    Connections {
+                        target: root
+
+                        function onHoldFeedbackRequested(targetIndex: int, kind: string): void {
+                            if (targetIndex !== actionButton.index)
+                                return;
+
+                            cancelFeedback.stop();
+                            completeFeedback.stop();
+                            actionButton.feedbackOffset = 0;
+                            actionButton.feedbackScale = 1;
+
+                            if (kind === "cancel")
+                                cancelFeedback.restart();
+                            else if (kind === "complete")
+                                completeFeedback.restart();
+                        }
                     }
-                }
 
-                Rectangle {
-                    width: parent.width
-                    height: 1
-                    color: Colors.palette.m3outlineVariant
-                    opacity: 0.35
-                }
+                    SequentialAnimation {
+                        id: cancelFeedback
 
-                Grid {
-                    id: actionGrid
-
-                    width: parent.width
-                    height: 172
-                    columns: 2
-                    spacing: 8
-
-                    Repeater {
-                        model: SessionActions.actions
-
-                        ActionCapsule {
-                            id: actionButton
-
-                            required property var modelData
-                            required property int index
-
-                            readonly property bool selected: root.selectedIndex === index
-                            readonly property bool holding: root.holdingIndex === index || root.completingIndex === index
-                            readonly property bool activelyHolding: root.holdingIndex === index
-                            property real holdOffset: activelyHolding ? 1 : 0
-                            property real holdScale: activelyHolding ? 0.985 : 1
-                            property real feedbackOffset: 0
-                            property real feedbackScale: 1
-                            readonly property color actionColor: modelData.id === "shutdown"
-                                ? Colors.palette.m3errorContainer
-                                : Colors.palette.m3tertiaryContainer
-
-                            anchors.verticalCenter: undefined
-                            width: (actionGrid.width - actionGrid.spacing) / 2
-                            height: 82
-                            radius: 10
-                            clip: true
-                            content.text: ""
-                            color: Colors.palette.m3surfaceVariant
-                            border.width: selected ? 2 : 1
-                            border.color: selected ? Colors.palette.m3outline : "transparent"
-                            onHoveredChanged: {
-                                if (hovered)
-                                    root.selectedIndex = actionButton.index;
+                        NumberAnimation {
+                            target: actionButton
+                            property: "feedbackOffset"
+                            to: -2.5
+                            duration: 65
+                            easing.type: Easing.OutCubic
+                        }
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: actionButton
+                                property: "feedbackOffset"
+                                to: 0
+                                duration: 150
+                                easing.type: Easing.OutBack
                             }
-                            onPressed: {
-                                if (actionButton.modelData.dangerous)
-                                    root.beginAction(actionButton.index);
-                            }
-                            onClicked: {
-                                if (!actionButton.modelData.dangerous)
-                                    root.beginAction(actionButton.index);
-                            }
-                            onReleased: {
-                                if (root.holdingIndex === actionButton.index)
-                                    root.cancelHold(true);
-                            }
-                            onCanceled: {
-                                if (root.holdingIndex === actionButton.index)
-                                    root.cancelHold(false);
-                            }
-                            transform: [
-                                Translate {
-                                    y: actionButton.holdOffset + actionButton.feedbackOffset
-                                },
-                                Scale {
-                                    origin.x: actionButton.width / 2
-                                    origin.y: actionButton.height / 2
-                                    xScale: actionButton.holdScale * actionButton.feedbackScale
-                                    yScale: actionButton.holdScale * actionButton.feedbackScale
-                                }
-                            ]
-
-                            Behavior on holdOffset {
-                                NumberAnimation {
-                                    duration: 90
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-
-                            Behavior on holdScale {
-                                NumberAnimation {
-                                    duration: 90
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-
-                            Item {
-                                anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: actionButton.holding ? parent.width * root.holdProgress : 0
-                                clip: true
-
-                                Rectangle {
-                                    id: progressFill
-
-                                    width: actionButton.width
-                                    height: actionButton.height
-                                    radius: actionButton.radius
-                                    color: actionButton.actionColor
-                                    opacity: 0.82
-                                }
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 5
-
-                                AppText {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: actionButton.modelData.icon
-                                    color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding)
-                                        ? Colors.palette.m3error
-                                        : Colors.palette.m3onSurface
-                                    font.pixelSize: 22
-                                }
-
-                                AppText {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: actionButton.modelData.label
-                                    color: Colors.palette.m3onSurface
-                                    font.pixelSize: 11
-                                    font.weight: Font.DemiBold
-                                }
-
-                                AppText {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: actionButton.modelData.dangerous ? "Hold to confirm" : actionButton.modelData.description
-                                    color: Colors.palette.m3onSurfaceVariant
-                                    font.pixelSize: 8
-                                }
-                            }
-
-                            Connections {
-                                target: root
-
-                                function onHoldFeedbackRequested(targetIndex: int, kind: string): void {
-                                    if (targetIndex !== actionButton.index)
-                                        return;
-
-                                    cancelFeedback.stop();
-                                    completeFeedback.stop();
-                                    actionButton.feedbackOffset = 0;
-                                    actionButton.feedbackScale = 1;
-
-                                    if (kind === "cancel")
-                                        cancelFeedback.restart();
-                                    else if (kind === "complete")
-                                        completeFeedback.restart();
-                                }
-                            }
-
                             SequentialAnimation {
-                                id: cancelFeedback
-
                                 NumberAnimation {
                                     target: actionButton
-                                    property: "feedbackOffset"
-                                    to: -2.5
-                                    duration: 65
+                                    property: "feedbackScale"
+                                    to: 1.012
+                                    duration: 80
                                     easing.type: Easing.OutCubic
                                 }
-                                ParallelAnimation {
-                                    NumberAnimation {
-                                        target: actionButton
-                                        property: "feedbackOffset"
-                                        to: 0
-                                        duration: 150
-                                        easing.type: Easing.OutBack
-                                    }
-                                    SequentialAnimation {
-                                        NumberAnimation {
-                                            target: actionButton
-                                            property: "feedbackScale"
-                                            to: 1.012
-                                            duration: 80
-                                            easing.type: Easing.OutCubic
-                                        }
-                                        NumberAnimation {
-                                            target: actionButton
-                                            property: "feedbackScale"
-                                            to: 1
-                                            duration: 70
-                                            easing.type: Easing.InOutCubic
-                                        }
-                                    }
+                                NumberAnimation {
+                                    target: actionButton
+                                    property: "feedbackScale"
+                                    to: 1
+                                    duration: 70
+                                    easing.type: Easing.InOutCubic
                                 }
                             }
+                        }
+                    }
 
-                            SequentialAnimation {
-                                id: completeFeedback
+                    SequentialAnimation {
+                        id: completeFeedback
 
-                                ParallelAnimation {
-                                    NumberAnimation {
-                                        target: actionButton
-                                        property: "feedbackOffset"
-                                        to: -1
-                                        duration: 80
-                                        easing.type: Easing.OutCubic
-                                    }
-                                    NumberAnimation {
-                                        target: actionButton
-                                        property: "feedbackScale"
-                                        to: 1.018
-                                        duration: 80
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-                                ParallelAnimation {
-                                    NumberAnimation {
-                                        target: actionButton
-                                        property: "feedbackOffset"
-                                        to: 0
-                                        duration: 85
-                                        easing.type: Easing.InOutCubic
-                                    }
-                                    NumberAnimation {
-                                        target: actionButton
-                                        property: "feedbackScale"
-                                        to: 1
-                                        duration: 85
-                                        easing.type: Easing.InOutCubic
-                                    }
-                                }
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: actionButton
+                                property: "feedbackOffset"
+                                to: -1
+                                duration: 80
+                                easing.type: Easing.OutCubic
                             }
-
+                            NumberAnimation {
+                                target: actionButton
+                                property: "feedbackScale"
+                                to: 1.018
+                                duration: 80
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: actionButton
+                                property: "feedbackOffset"
+                                to: 0
+                                duration: 85
+                                easing.type: Easing.InOutCubic
+                            }
+                            NumberAnimation {
+                                target: actionButton
+                                property: "feedbackScale"
+                                to: 1
+                                duration: 85
+                                easing.type: Easing.InOutCubic
+                            }
                         }
                     }
                 }
+            }
+        }
 
-                Item {
-                    width: parent.width
-                    height: 22
+        Item {
+            width: parent.width
+            height: 22
 
-                    AppText {
-                        anchors.centerIn: parent
-                        text: {
-                            if (root.showHoldHint)
-                                return "\uf071  Hold longer to confirm";
-                            if (root.completingIndex >= 0)
-                                return "\uf00c  Confirmed";
-                            if (root.holdingIndex >= 0) {
-                                const remaining = Math.max(0, root.holdDuration * (1 - root.holdProgress));
-                                return `\uf25a  Keep holding  ${Math.ceil(remaining / 100) / 10}s`;
-                            }
-                            return "\uf25a  Hold Restart or Shut down for 1.2 seconds";
-                        }
-                        color: root.showHoldHint ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
-                        font.pixelSize: 9
+            AppText {
+                anchors.centerIn: parent
+                text: {
+                    if (root.showHoldHint)
+                        return "\uf071  Hold longer to confirm";
+                    if (root.completingIndex >= 0)
+                        return "\uf00c  Confirmed";
+                    if (root.holdingIndex >= 0) {
+                        const remaining = Math.max(0, root.holdDuration * (1 - root.holdProgress));
+                        return `\uf25a  Keep holding  ${Math.ceil(remaining / 100) / 10}s`;
                     }
+                    return "\uf25a  Hold Restart or Shut down for 1.2 seconds";
                 }
+                color: root.showHoldHint ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
+                font.pixelSize: 9
+            }
+        }
     }
 }
