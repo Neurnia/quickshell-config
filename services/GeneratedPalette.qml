@@ -8,18 +8,10 @@ Singleton {
     id: root
 
     readonly property string path: Quickshell.cachePath("palette.json")
-    readonly property var colors: paletteAdapter.colors
-    readonly property string mode: paletteAdapter.mode
-    readonly property string seed: paletteAdapter.seed
-    readonly property var requiredRoles: ["primary", "onPrimary", "primaryContainer", "onPrimaryContainer", "secondary",
-        "onSecondary", "secondaryContainer", "onSecondaryContainer", "tertiary", "onTertiary", "tertiaryContainer",
-        "onTertiaryContainer", "error", "onError", "errorContainer", "onErrorContainer", "background", "onBackground",
-        "surface", "onSurface", "surfaceVariant", "onSurfaceVariant", "outline", "outlineVariant", "shadow", "scrim",
-        "inverseSurface", "inverseOnSurface", "inversePrimary", "primaryFixed", "onPrimaryFixed", "primaryFixedDim",
-        "onPrimaryFixedVariant", "secondaryFixed", "onSecondaryFixed", "secondaryFixedDim", "onSecondaryFixedVariant",
-        "tertiaryFixed", "onTertiaryFixed", "tertiaryFixedDim", "onTertiaryFixedVariant", "surfaceDim", "surfaceBright",
-        "surfaceContainerLowest", "surfaceContainerLow", "surfaceContainer", "surfaceContainerHigh",
-        "surfaceContainerHighest"]
+    property var colors: ({})
+    property string mode: ""
+    property string seed: ""
+    readonly property var requiredRoles: ["primary", "onPrimary", "primaryContainer", "onPrimaryContainer", "secondary", "onSecondary", "secondaryContainer", "onSecondaryContainer", "tertiary", "onTertiary", "tertiaryContainer", "onTertiaryContainer", "error", "onError", "errorContainer", "onErrorContainer", "background", "onBackground", "surface", "onSurface", "surfaceVariant", "onSurfaceVariant", "outline", "outlineVariant", "shadow", "scrim", "inverseSurface", "inverseOnSurface", "inversePrimary", "primaryFixed", "onPrimaryFixed", "primaryFixedDim", "onPrimaryFixedVariant", "secondaryFixed", "onSecondaryFixed", "secondaryFixedDim", "onSecondaryFixedVariant", "tertiaryFixed", "onTertiaryFixed", "tertiaryFixedDim", "onTertiaryFixedVariant", "surfaceDim", "surfaceBright", "surfaceContainerLowest", "surfaceContainerLow", "surfaceContainer", "surfaceContainerHigh", "surfaceContainerHighest"]
 
     property bool available: false
     property string errorMessage: "Generated palette has not been loaded"
@@ -28,33 +20,71 @@ Singleton {
         return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
     }
 
-    function validate(): void {
-        if (paletteAdapter.version !== 1) {
-            available = false;
-            errorMessage = `Unsupported palette version: ${paletteAdapter.version}`;
+    function reject(message: string): void {
+        colors = {};
+        mode = "";
+        seed = "";
+        available = false;
+        errorMessage = message;
+    }
+
+    function load(): void {
+        let document;
+
+        try {
+            document = JSON.parse(paletteFile.text());
+        } catch (error) {
+            reject(`Malformed palette JSON: ${error}`);
             return;
         }
 
-        if (paletteAdapter.mode !== "dark" && paletteAdapter.mode !== "light") {
-            available = false;
-            errorMessage = `Unsupported palette mode: ${paletteAdapter.mode || "missing"}`;
+        if (document === null || typeof document !== "object" || Array.isArray(document)) {
+            reject("Palette root must be a JSON object");
+            return;
+        }
+
+        if (document.version !== 1) {
+            reject(`Unsupported palette version: ${document.version}`);
+            return;
+        }
+
+        if (document.mode !== "dark" && document.mode !== "light") {
+            reject(`Unsupported palette mode: ${document.mode || "missing"}`);
             return;
         }
 
         for (const role of requiredRoles) {
-            if (!isHexColor(colors[role])) {
-                available = false;
-                errorMessage = `Invalid or missing color role: ${role}`;
+            if (!isHexColor(document.colors?.[role])) {
+                reject(`Invalid or missing color role: ${role}`);
                 return;
             }
         }
 
+        colors = document.colors;
+        mode = document.mode;
+        seed = typeof document.seed === "string" ? document.seed : "";
         available = true;
         errorMessage = "";
     }
 
     function reload(): void {
         paletteFile.reload();
+    }
+
+    IpcHandler {
+        target: "palette"
+
+        function reload(): void {
+            root.reload();
+        }
+
+        function status(): string {
+            return root.available ? `generated (${root.mode})` : `fallback: ${root.errorMessage}`;
+        }
+
+        function path(): string {
+            return root.path;
+        }
     }
 
     FileView {
@@ -66,19 +96,9 @@ Singleton {
         printErrors: false
 
         onFileChanged: reload()
-        onLoaded: root.validate()
+        onLoaded: root.load()
         onLoadFailed: error => {
-            root.available = false;
-            root.errorMessage = FileViewError.toString(error);
-        }
-
-        JsonAdapter {
-            id: paletteAdapter
-
-            property int version: 0
-            property string mode: ""
-            property string seed: ""
-            property var colors: ({})
+            root.reject(FileViewError.toString(error));
         }
     }
 }
