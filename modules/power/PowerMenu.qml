@@ -13,11 +13,15 @@ PanelWindow {
     property bool shown: false
     property int selectedIndex: 0
     property int holdingIndex: -1
+    property int completingIndex: -1
     property real holdProgress: 0
     property double holdStartedAt: 0
     property bool showHoldHint: false
+    property var pendingCompletion: null
 
     readonly property int holdDuration: 1200
+
+    signal holdFeedbackRequested(int index, string kind)
 
     anchors {
         top: true
@@ -36,6 +40,9 @@ PanelWindow {
 
     function open(): void {
         cancelHold(false);
+        completionTimer.stop();
+        completingIndex = -1;
+        pendingCompletion = null;
         selectedIndex = 0;
         showHoldHint = false;
         shown = true;
@@ -44,6 +51,9 @@ PanelWindow {
 
     function close(): void {
         cancelHold(false);
+        completionTimer.stop();
+        completingIndex = -1;
+        pendingCompletion = null;
         shown = false;
     }
 
@@ -67,6 +77,7 @@ PanelWindow {
     }
 
     function cancelHold(showHint: bool): void {
+        const previousIndex = holdingIndex;
         const wasHolding = holdingIndex >= 0 && holdProgress > 0 && holdProgress < 1;
         holdTimer.stop();
         holdingIndex = -1;
@@ -74,6 +85,7 @@ PanelWindow {
 
         if (showHint && wasHolding) {
             showHoldHint = true;
+            holdFeedbackRequested(previousIndex, "cancel");
             hintTimer.restart();
         }
     }
@@ -82,12 +94,14 @@ PanelWindow {
         if (holdingIndex < 0 || holdProgress < 1)
             return;
 
-        const action = SessionActions.actions[holdingIndex];
+        const completedIndex = holdingIndex;
         holdTimer.stop();
         holdingIndex = -1;
-        holdProgress = 0;
-        shown = false;
-        SessionActions.execute(action);
+        completingIndex = completedIndex;
+        pendingCompletion = SessionActions.actions[completedIndex];
+        holdProgress = 1;
+        holdFeedbackRequested(completedIndex, "complete");
+        completionTimer.restart();
     }
 
     function moveSelection(delta: int): void {
@@ -131,6 +145,20 @@ PanelWindow {
 
         interval: 1800
         onTriggered: root.showHoldHint = false
+    }
+
+    Timer {
+        id: completionTimer
+
+        interval: 180
+        onTriggered: {
+            const action = root.pendingCompletion;
+            root.pendingCompletion = null;
+            root.completingIndex = -1;
+            root.holdProgress = 0;
+            root.shown = false;
+            SessionActions.execute(action);
+        }
     }
 
     FocusScope {
@@ -290,7 +318,12 @@ PanelWindow {
                             required property int index
 
                             readonly property bool selected: root.selectedIndex === index
-                            readonly property bool holding: root.holdingIndex === index
+                            readonly property bool holding: root.holdingIndex === index || root.completingIndex === index
+                            readonly property bool activelyHolding: root.holdingIndex === index
+                            property real holdOffset: activelyHolding ? 1 : 0
+                            property real holdScale: activelyHolding ? 0.985 : 1
+                            property real feedbackOffset: 0
+                            property real feedbackScale: 1
                             readonly property color actionColor: modelData.id === "shutdown"
                                 ? Colors.palette.m3errorContainer
                                 : Colors.palette.m3tertiaryContainer
@@ -304,6 +337,31 @@ PanelWindow {
                             color: Colors.palette.m3surfaceVariant
                             border.width: selected ? 2 : 1
                             border.color: selected ? Colors.palette.m3outline : "transparent"
+                            transform: [
+                                Translate {
+                                    y: actionButton.holdOffset + actionButton.feedbackOffset
+                                },
+                                Scale {
+                                    origin.x: actionButton.width / 2
+                                    origin.y: actionButton.height / 2
+                                    xScale: actionButton.holdScale * actionButton.feedbackScale
+                                    yScale: actionButton.holdScale * actionButton.feedbackScale
+                                }
+                            ]
+
+                            Behavior on holdOffset {
+                                NumberAnimation {
+                                    duration: 90
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+
+                            Behavior on holdScale {
+                                NumberAnimation {
+                                    duration: 90
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
 
                             Item {
                                 anchors.left: parent.left
@@ -313,11 +371,13 @@ PanelWindow {
                                 clip: true
 
                                 Rectangle {
+                                    id: progressFill
+
                                     width: actionButton.width
                                     height: actionButton.height
                                     radius: actionButton.radius
                                     color: actionButton.actionColor
-                                    opacity: 0.8
+                                    opacity: 0.82
                                 }
                             }
 
@@ -361,6 +421,99 @@ PanelWindow {
                                 }
                             }
 
+                            Connections {
+                                target: root
+
+                                function onHoldFeedbackRequested(targetIndex: int, kind: string): void {
+                                    if (targetIndex !== actionButton.index)
+                                        return;
+
+                                    cancelFeedback.stop();
+                                    completeFeedback.stop();
+                                    actionButton.feedbackOffset = 0;
+                                    actionButton.feedbackScale = 1;
+
+                                    if (kind === "cancel")
+                                        cancelFeedback.restart();
+                                    else if (kind === "complete")
+                                        completeFeedback.restart();
+                                }
+                            }
+
+                            SequentialAnimation {
+                                id: cancelFeedback
+
+                                NumberAnimation {
+                                    target: actionButton
+                                    property: "feedbackOffset"
+                                    to: -2.5
+                                    duration: 65
+                                    easing.type: Easing.OutCubic
+                                }
+                                ParallelAnimation {
+                                    NumberAnimation {
+                                        target: actionButton
+                                        property: "feedbackOffset"
+                                        to: 0
+                                        duration: 150
+                                        easing.type: Easing.OutBack
+                                    }
+                                    SequentialAnimation {
+                                        NumberAnimation {
+                                            target: actionButton
+                                            property: "feedbackScale"
+                                            to: 1.012
+                                            duration: 80
+                                            easing.type: Easing.OutCubic
+                                        }
+                                        NumberAnimation {
+                                            target: actionButton
+                                            property: "feedbackScale"
+                                            to: 1
+                                            duration: 70
+                                            easing.type: Easing.InOutCubic
+                                        }
+                                    }
+                                }
+                            }
+
+                            SequentialAnimation {
+                                id: completeFeedback
+
+                                ParallelAnimation {
+                                    NumberAnimation {
+                                        target: actionButton
+                                        property: "feedbackOffset"
+                                        to: -1
+                                        duration: 80
+                                        easing.type: Easing.OutCubic
+                                    }
+                                    NumberAnimation {
+                                        target: actionButton
+                                        property: "feedbackScale"
+                                        to: 1.018
+                                        duration: 80
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                                ParallelAnimation {
+                                    NumberAnimation {
+                                        target: actionButton
+                                        property: "feedbackOffset"
+                                        to: 0
+                                        duration: 85
+                                        easing.type: Easing.InOutCubic
+                                    }
+                                    NumberAnimation {
+                                        target: actionButton
+                                        property: "feedbackScale"
+                                        to: 1
+                                        duration: 85
+                                        easing.type: Easing.InOutCubic
+                                    }
+                                }
+                            }
+
                             MouseArea {
                                 anchors.fill: parent
                                 acceptedButtons: Qt.LeftButton
@@ -395,6 +548,8 @@ PanelWindow {
                         text: {
                             if (root.showHoldHint)
                                 return "\uf071  Hold longer to confirm";
+                            if (root.completingIndex >= 0)
+                                return "\uf00c  Confirmed";
                             if (root.holdingIndex >= 0) {
                                 const remaining = Math.max(0, root.holdDuration * (1 - root.holdProgress));
                                 return `\uf25a  Keep holding  ${Math.ceil(remaining / 100) / 10}s`;
