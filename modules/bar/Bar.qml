@@ -42,6 +42,10 @@ PanelWindow {
         id: volume
         anchors.right: clock.left
         anchors.rightMargin: 5
+
+        panel.anchor.window: root
+        panel.anchor.rect.x: volume.x + volume.width / 2
+        panel.anchor.rect.y: root.height
     }
 
     Workspaces {
