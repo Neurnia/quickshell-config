@@ -8,7 +8,7 @@ Row {
     Repeater {
         // normal workspaces
         model: Hyprland.workspaces.values.filter(ws => ws.id > 0)
-        Capsule {
+        ActionCapsule {
             required property HyprlandWorkspace modelData
             content.text: modelData.id
             width: 20
@@ -17,15 +17,7 @@ Row {
             color: modelData.focused ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
             content.color: modelData.focused ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
 
-            border.color: hover.hovered ? Colors.palette.m3outline : "transparent"
-            HoverHandler {
-                id: hover
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Hyprland.dispatch(`workspace ${modelData.id}`)
-            }
+            onClicked: Hyprland.dispatch(`workspace ${modelData.id}`)
         }
     }
 }
