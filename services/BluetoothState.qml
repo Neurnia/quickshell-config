@@ -13,8 +13,10 @@ Singleton {
     readonly property bool enabled: adapter?.enabled ?? false
     readonly property bool discovering: adapter?.discovering ?? false
     readonly property var devices: adapter?.devices?.values ?? []
-    readonly property var connectedDevices: devices.filter(device => device && device.connected)
-    readonly property var pairedDevices: devices.filter(device => device && (device.paired || device.bonded || device.trusted))
+    readonly property var connectedDevices: sortDevices(devices.filter(device => device && device.connected))
+    readonly property var pairedDevices: sortDevices(devices.filter(device => device && !device.connected && isKnown(device)))
+    readonly property var availableDevices: sortDevices(devices.filter(device => device && !device.connected && !isKnown(device) && hasUsefulName(device)))
+    readonly property var displayItems: buildDisplayItems()
     readonly property int connectedCount: connectedDevices.length
     readonly property string icon: enabled ? "\uf293" : "󰂲"
     readonly property string label: {
@@ -60,6 +62,88 @@ Singleton {
         if (/display|television|\\btv\\b/.test(combined))
             return "\uf26c";
         return "\uf293";
+    }
+
+    function isKnown(device): bool {
+        return !!device && (device.paired || device.bonded || device.trusted);
+    }
+
+    function hasUsefulName(device): bool {
+        if (!device)
+            return false;
+        const candidate = (device.name || device.deviceName || "").trim();
+        const macAddress = /^[0-9A-F]{2}(?:[:-][0-9A-F]{2}){5}$/i;
+        return candidate !== ""
+            && !macAddress.test(candidate)
+            && candidate.toUpperCase() !== (device.address || "").toUpperCase();
+    }
+
+    function sortDevices(source): var {
+        return [...source].sort((left, right) => deviceName(left).localeCompare(deviceName(right)));
+    }
+
+    function buildDisplayItems(): var {
+        const items = [];
+
+        function appendSection(title, icon, source) {
+            if (source.length === 0)
+                return;
+            items.push({
+                kind: "header",
+                title: title,
+                icon: icon,
+                count: source.length
+            });
+            source.forEach(device => items.push({
+                kind: "device",
+                device: device
+            }));
+        }
+
+        appendSection("Connected", "\uf00c", connectedDevices);
+        appendSection("Paired", "\uf0c1", pairedDevices);
+        appendSection("Available", "\uf002", availableDevices);
+        return items;
+    }
+
+    function deviceStatus(device): string {
+        if (!device)
+            return "Unavailable";
+        if (device.pairing)
+            return "Pairing…";
+        if (device.state === BluetoothDeviceState.Connecting)
+            return "Connecting…";
+        if (device.state === BluetoothDeviceState.Disconnecting)
+            return "Disconnecting…";
+        if (device.connected)
+            return "Connected";
+        if (isKnown(device))
+            return "Paired";
+        return "Ready to pair";
+    }
+
+    function deviceBusy(device): bool {
+        return !!device && (device.pairing
+                            || device.state === BluetoothDeviceState.Connecting
+                            || device.state === BluetoothDeviceState.Disconnecting);
+    }
+
+    function toggleDevice(device): void {
+        if (!device || deviceBusy(device))
+            return;
+
+        if (device.connected) {
+            device.disconnect();
+            return;
+        }
+
+        if (isKnown(device)) {
+            device.connect();
+            return;
+        }
+
+        device.trusted = true;
+        device.pair();
     }
 
     function toggleEnabled(): void {
