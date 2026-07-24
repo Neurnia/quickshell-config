@@ -1,6 +1,5 @@
 import QtQuick
 import qs.components
-import qs.services
 
 ActionCapsule {
     id: root

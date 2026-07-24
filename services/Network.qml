@@ -346,7 +346,7 @@ Singleton {
             onStreamFinished: root.runnerError = text.trim()
         }
 
-        onExited: (exitCode, exitStatus) => {
+        onExited: exitCode => {
             const purpose = root.actionPurpose;
             const targetName = root.connectingName;
             const errorMessage = root.friendlyError(root.runnerError);
@@ -383,7 +383,7 @@ Singleton {
             root.pendingPassword = "";
         }
 
-        onExited: (exitCode, exitStatus) => {
+        onExited: exitCode => {
             const targetName = root.connectingName;
             const errorMessage = root.friendlyError(root.runnerError);
 
