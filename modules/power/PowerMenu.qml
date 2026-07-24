@@ -217,7 +217,7 @@ OverlayDialog {
                         }
                     }
 
-                    Capsule {
+                    ActionCapsule {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         width: 30
@@ -225,18 +225,7 @@ OverlayDialog {
                         radius: height * 0.2
                         content.text: "\uf00d"
                         color: Colors.palette.m3surfaceVariant
-                        border.color: closeHover.hovered ? Colors.palette.m3outline : "transparent"
-
-                        HoverHandler {
-                            id: closeHover
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.close()
-                        }
+                        onClicked: root.close()
                     }
                 }
 
@@ -258,7 +247,7 @@ OverlayDialog {
                     Repeater {
                         model: SessionActions.actions
 
-                        Capsule {
+                        ActionCapsule {
                             id: actionButton
 
                             required property var modelData
@@ -284,6 +273,26 @@ OverlayDialog {
                             color: Colors.palette.m3surfaceVariant
                             border.width: selected ? 2 : 1
                             border.color: selected ? Colors.palette.m3outline : "transparent"
+                            onHoveredChanged: {
+                                if (hovered)
+                                    root.selectedIndex = actionButton.index;
+                            }
+                            onPressed: {
+                                if (actionButton.modelData.dangerous)
+                                    root.beginAction(actionButton.index);
+                            }
+                            onClicked: {
+                                if (!actionButton.modelData.dangerous)
+                                    root.beginAction(actionButton.index);
+                            }
+                            onReleased: {
+                                if (root.holdingIndex === actionButton.index)
+                                    root.cancelHold(true);
+                            }
+                            onCanceled: {
+                                if (root.holdingIndex === actionButton.index)
+                                    root.cancelHold(false);
+                            }
                             transform: [
                                 Translate {
                                     y: actionButton.holdOffset + actionButton.feedbackOffset
@@ -354,14 +363,6 @@ OverlayDialog {
                                     text: actionButton.modelData.dangerous ? "Hold to confirm" : actionButton.modelData.description
                                     color: Colors.palette.m3onSurfaceVariant
                                     font.pixelSize: 8
-                                }
-                            }
-
-                            HoverHandler {
-                                id: actionHover
-                                onHoveredChanged: {
-                                    if (hovered)
-                                        root.selectedIndex = actionButton.index;
                                 }
                             }
 
@@ -458,27 +459,6 @@ OverlayDialog {
                                 }
                             }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: Qt.PointingHandCursor
-                                onPressed: {
-                                    if (actionButton.modelData.dangerous)
-                                        root.beginAction(actionButton.index);
-                                }
-                                onClicked: {
-                                    if (!actionButton.modelData.dangerous)
-                                        root.beginAction(actionButton.index);
-                                }
-                                onReleased: {
-                                    if (root.holdingIndex === actionButton.index)
-                                        root.cancelHold(true);
-                                }
-                                onCanceled: {
-                                    if (root.holdingIndex === actionButton.index)
-                                        root.cancelHold(false);
-                                }
-                            }
                         }
                     }
                 }
