@@ -59,7 +59,7 @@ PanelWindow {
         anchors.rightMargin: 5
 
         panel.anchor.window: root
-        panel.anchor.rect.x: internet.x + internet.width / 2
+        panel.anchor.rect.x: internet.x + (internet.width - internet.panel.panelWidth) / 2
         panel.anchor.rect.y: root.height
         onConfigRequested: root.wifiConfigRequested()
     }
@@ -70,7 +70,7 @@ PanelWindow {
         anchors.rightMargin: 5
 
         panel.anchor.window: root
-        panel.anchor.rect.x: bluetooth.x + bluetooth.width / 2
+        panel.anchor.rect.x: bluetooth.x + (bluetooth.width - bluetooth.panel.panelWidth) / 2
         panel.anchor.rect.y: root.height
         onConfigRequested: root.bluetoothConfigRequested()
     }
