@@ -3,14 +3,12 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import qs.components
 import qs.services
 
-PanelWindow {
+OverlayDialog {
     id: root
 
-    property bool shown: false
     property var selectedDevice: null
     property string pairingMode: "waiting"
     property string pairingMessage: ""
@@ -21,24 +19,17 @@ PanelWindow {
     property int pairingStderrLength: 0
     property var unpairCandidate: null
 
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
+    layerNamespace: "quickshell:bluetooth-config"
+    onDismissRequested: root.close()
+    onEscapePressed: {
+        if (root.selectedDevice)
+            root.showDeviceList();
+        else
+            root.close();
     }
-    visible: shown
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-
-    WlrLayershell.namespace: "quickshell:bluetooth-config"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.exclusiveZone: -1
-    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     function open(): void {
         shown = true;
-        focusScope.forceActiveFocus();
         BluetoothState.startDiscovery();
         Qt.callLater(() => deviceList.positionViewAtBeginning());
     }
@@ -65,7 +56,7 @@ PanelWindow {
         pairingStderrLength = 0;
         pairingInput.text = "";
         pairingRunner.exec(["bluetoothctl", "--agent", "KeyboardDisplay", "--timeout", "90", "pair", device.address]);
-        Qt.callLater(() => focusScope.forceActiveFocus());
+        Qt.callLater(() => root.takeFocus());
     }
 
     function showDeviceList(): void {
@@ -76,7 +67,7 @@ PanelWindow {
         pairingCode = "";
         pairingError = "";
         pairingInput.text = "";
-        focusScope.forceActiveFocus();
+        takeFocus();
     }
 
     function cancelPairing(): void {
@@ -140,7 +131,7 @@ PanelWindow {
         pairingMode = "waiting";
         pairingMessage = "Waiting for the device to finish pairing…";
         pairingInput.text = "";
-        focusScope.forceActiveFocus();
+        takeFocus();
     }
 
     function submitPairingInput(): void {
@@ -228,51 +219,10 @@ PanelWindow {
         onTriggered: root.unpairCandidate = null
     }
 
-    FocusScope {
-        id: focusScope
-
+    Column {
         anchors.fill: parent
-        focus: root.shown
-
-        Keys.onEscapePressed: event => {
-            if (root.selectedDevice)
-                root.showDeviceList();
-            else
-                root.close();
-            event.accepted = true;
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "#B8000000"
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                onClicked: root.close()
-            }
-        }
-
-        Capsule {
-            id: card
-
-            anchors.centerIn: parent
-            width: 440
-            height: 500
-            radius: 16
-            color: Colors.palette.m3surfaceContainerLowest
-            border.color: Colors.palette.m3outlineVariant
-            content.text: ""
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-            }
-
-            Column {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 10
+        anchors.margins: 12
+        spacing: 10
 
                 Item {
                     width: parent.width
@@ -758,7 +708,5 @@ PanelWindow {
                         }
                     }
                 }
-            }
-        }
     }
 }
