@@ -32,12 +32,6 @@ PanelWindow {
         anchors.rightMargin: 5
     }
 
-    Browser {
-        id: browser
-        anchors.right: volume.left
-        anchors.rightMargin: 5
-    }
-
     Volume {
         id: volume
         anchors.right: clock.left
