@@ -259,7 +259,7 @@ OverlayDialog {
                     property real holdScale: activelyHolding ? 0.985 : 1
                     property real feedbackOffset: 0
                     property real feedbackScale: 1
-                    readonly property color actionColor: modelData.id === "shutdown" ? Colors.palette.errorContainer : Colors.palette.tertiaryContainer
+                    readonly property color progressColor: modelData.id === "shutdown" ? Colors.palette.error : Colors.palette.primary
 
                     anchors.verticalCenter: undefined
                     width: (actionGrid.width - actionGrid.spacing) / 2
@@ -329,8 +329,8 @@ OverlayDialog {
                             width: actionButton.width
                             height: actionButton.height
                             radius: actionButton.radius
-                            color: actionButton.actionColor
-                            opacity: 0.82
+                            color: actionButton.progressColor
+                            opacity: 0.38
                         }
                     }
 
