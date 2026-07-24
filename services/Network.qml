@@ -37,13 +37,7 @@ Singleton {
             return "󰈀";
         if (connectionType !== "wifi")
             return "󰤭";
-        if (signalStrength >= 75)
-            return "󰤨";
-        if (signalStrength >= 50)
-            return "󰤥";
-        if (signalStrength >= 25)
-            return "󰤢";
-        return "󰤟";
+        return signalIcon(signalStrength);
     }
     readonly property string label: {
         if (connected)
@@ -75,6 +69,16 @@ Singleton {
 
         fields.push(field);
         return fields;
+    }
+
+    function signalIcon(strength: int): string {
+        if (strength >= 75)
+            return "󰤨";
+        if (strength >= 50)
+            return "󰤥";
+        if (strength >= 25)
+            return "󰤢";
+        return "󰤟";
     }
 
     function refresh(): void {

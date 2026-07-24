@@ -92,16 +92,6 @@ PanelWindow {
         Network.connectWithPassword(selectedNetwork, password);
     }
 
-    function signalIcon(strength: int): string {
-        if (strength >= 75)
-            return "󰤨";
-        if (strength >= 50)
-            return "󰤥";
-        if (strength >= 25)
-            return "󰤢";
-        return "󰤟";
-    }
-
     IpcHandler {
         target: "wifiConfig"
 
@@ -356,7 +346,7 @@ PanelWindow {
                                     anchors.left: parent.left
                                     anchors.leftMargin: 12
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: root.signalIcon(networkRow.modelData.signal)
+                                    text: Network.signalIcon(networkRow.modelData.signal)
                                     color: networkRow.modelData.active ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
                                     font.family: "JetBrainsMono Nerd Font"
                                     font.pixelSize: 16

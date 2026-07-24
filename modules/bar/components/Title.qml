@@ -3,5 +3,5 @@ import Quickshell.Hyprland
 import qs.components
 
 Capsule {
-    content.text: Hyprland.activeToplevel.title
+    content.text: Hyprland.activeToplevel?.title ?? ""
 }
