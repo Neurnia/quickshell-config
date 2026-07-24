@@ -268,56 +268,35 @@ OverlayDialog {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 6
 
-                        Capsule {
-                            id: scanButton
+                    ActionCapsule {
+                        id: scanButton
 
-                            anchors.verticalCenter: undefined
+                        actionEnabled: BluetoothState.enabled
+                        anchors.verticalCenter: undefined
                             width: 82
                             height: 30
                             radius: height * 0.2
-                            content.text: BluetoothState.discovering ? "\uf110  Scan" : "\uf2f1  Scan"
-                            color: BluetoothState.discovering ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                            content.color: BluetoothState.discovering ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
-                            border.color: scanHover.hovered && BluetoothState.enabled ? Colors.palette.m3outline : "transparent"
-
-                            HoverHandler {
-                                id: scanHover
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: BluetoothState.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: {
-                                    if (BluetoothState.discovering)
-                                        BluetoothState.stopDiscovery();
-                                    else
-                                        BluetoothState.startDiscovery();
-                                }
-                            }
+                        content.text: BluetoothState.discovering ? "\uf110  Scan" : "\uf2f1  Scan"
+                        color: BluetoothState.discovering ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
+                        content.color: BluetoothState.discovering ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
+                        onClicked: {
+                            if (BluetoothState.discovering)
+                                BluetoothState.stopDiscovery();
+                            else
+                                BluetoothState.startDiscovery();
                         }
+                    }
 
-                        Capsule {
-                            id: closeButton
+                    ActionCapsule {
+                        id: closeButton
 
                             anchors.verticalCenter: undefined
                             width: 30
                             height: 30
-                            radius: height * 0.2
-                            content.text: "\uf00d"
-                            color: Colors.palette.m3surfaceVariant
-                            border.color: closeHover.hovered ? Colors.palette.m3outline : "transparent"
-
-                            HoverHandler {
-                                id: closeHover
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.close()
-                            }
+                        radius: height * 0.2
+                        content.text: "\uf00d"
+                        color: Colors.palette.m3surfaceVariant
+                        onClicked: root.close()
                         }
                     }
                 }
@@ -445,9 +424,10 @@ OverlayDialog {
                                 height: 28
                                 spacing: 4
 
-                                Capsule {
+                                ActionCapsule {
                                     id: connectionButton
 
+                                    actionEnabled: !BluetoothState.deviceBusy(deviceRow.device)
                                     anchors.verticalCenter: undefined
                                     width: 28
                                     height: 28
@@ -461,31 +441,21 @@ OverlayDialog {
                                     }
                                     color: "transparent"
                                     content.color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
-                                    border.color: connectionHover.hovered && !BluetoothState.deviceBusy(deviceRow.device) ? Colors.palette.m3outline : "transparent"
-
-                                    HoverHandler {
-                                        id: connectionHover
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        acceptedButtons: Qt.LeftButton
-                                        cursorShape: !BluetoothState.deviceBusy(deviceRow.device) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                        onClicked: {
-                                            root.unpairCandidate = null;
-                                            if (BluetoothState.isKnown(deviceRow.device))
-                                                BluetoothState.toggleDevice(deviceRow.device);
-                                            else
-                                                root.beginPairing(deviceRow.device);
-                                        }
+                                    onClicked: {
+                                        root.unpairCandidate = null;
+                                        if (BluetoothState.isKnown(deviceRow.device))
+                                            BluetoothState.toggleDevice(deviceRow.device);
+                                        else
+                                            root.beginPairing(deviceRow.device);
                                     }
                                 }
 
-                                Capsule {
+                                ActionCapsule {
                                     id: unpairButton
 
                                     readonly property bool confirming: root.unpairCandidate === deviceRow.device
 
+                                    actionEnabled: !BluetoothState.deviceBusy(deviceRow.device)
                                     anchors.verticalCenter: undefined
                                     width: visible ? 28 : 0
                                     height: 28
@@ -494,18 +464,7 @@ OverlayDialog {
                                     content.text: confirming ? "\uf00c" : "\uf1f8"
                                     color: confirming ? Colors.palette.m3error : "transparent"
                                     content.color: confirming ? Colors.palette.m3onError : (deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant)
-                                    border.color: unpairHover.hovered && !BluetoothState.deviceBusy(deviceRow.device) ? Colors.palette.m3outline : "transparent"
-
-                                    HoverHandler {
-                                        id: unpairHover
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        acceptedButtons: Qt.LeftButton
-                                        cursorShape: !BluetoothState.deviceBusy(deviceRow.device) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                        onClicked: root.requestUnpair(deviceRow.device)
-                                    }
+                                    onClicked: root.requestUnpair(deviceRow.device)
                                 }
                             }
 
@@ -624,86 +583,54 @@ OverlayDialog {
                             height: 34
                             spacing: 8
 
-                            Capsule {
-                                id: pairingBackButton
+                    ActionCapsule {
+                        id: pairingBackButton
 
                                 anchors.verticalCenter: undefined
                                 width: root.pairingMode === "confirm" ? (parent.width - parent.spacing * 2) / 3 : root.pairingMode === "input" ? (parent.width - parent.spacing) / 2 : parent.width
                                 height: parent.height
-                                radius: height * 0.2
-                                content.text: "\uf060  Back"
-                                color: Colors.palette.m3surfaceVariant
-                                border.color: pairingBackHover.hovered ? Colors.palette.m3outline : "transparent"
+                        radius: height * 0.2
+                        content.text: "\uf060  Back"
+                        color: Colors.palette.m3surfaceVariant
+                        onClicked: root.showDeviceList()
+                    }
 
-                                HoverHandler {
-                                    id: pairingBackHover
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.showDeviceList()
-                                }
-                            }
-
-                            Capsule {
-                                id: rejectPairingButton
+                    ActionCapsule {
+                        id: rejectPairingButton
 
                                 anchors.verticalCenter: undefined
                                 width: (parent.width - parent.spacing * 2) / 3
                                 height: parent.height
                                 visible: root.pairingMode === "confirm"
-                                radius: height * 0.2
-                                content.text: "\uf00d  No"
-                                color: Colors.palette.m3surfaceVariant
-                                border.color: rejectPairingHover.hovered ? Colors.palette.m3outline : "transparent"
+                        radius: height * 0.2
+                        content.text: "\uf00d  No"
+                        color: Colors.palette.m3surfaceVariant
+                        onClicked: {
+                            root.answerPairing("no");
+                            root.showDeviceList();
+                        }
+                    }
 
-                                HoverHandler {
-                                    id: rejectPairingHover
-                                }
+                    ActionCapsule {
+                        id: acceptPairingButton
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.answerPairing("no");
-                                        root.showDeviceList();
-                                    }
-                                }
-                            }
+                        readonly property bool acceptable: root.pairingMode === "confirm" || (root.pairingMode === "input" && pairingInput.text.trim() !== "")
 
-                            Capsule {
-                                id: acceptPairingButton
-
-                                readonly property bool acceptable: root.pairingMode === "confirm" || (root.pairingMode === "input" && pairingInput.text.trim() !== "")
-
-                                anchors.verticalCenter: undefined
+                        actionEnabled: acceptable
+                        anchors.verticalCenter: undefined
                                 width: root.pairingMode === "confirm" ? (parent.width - parent.spacing * 2) / 3 : (parent.width - parent.spacing) / 2
                                 height: parent.height
                                 visible: root.pairingMode === "confirm" || root.pairingMode === "input"
                                 radius: height * 0.2
-                                content.text: root.pairingMode === "confirm" ? "\uf00c  Yes" : "\uf00c  Pair"
-                                color: acceptable ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                                content.color: acceptable ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
-                                border.color: acceptPairingHover.hovered && acceptable ? Colors.palette.m3outline : "transparent"
-
-                                HoverHandler {
-                                    id: acceptPairingHover
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton
-                                    cursorShape: acceptPairingButton.acceptable ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: {
-                                        if (root.pairingMode === "confirm")
-                                            root.answerPairing("yes");
-                                        else
-                                            root.submitPairingInput();
-                                    }
-                                }
+                        content.text: root.pairingMode === "confirm" ? "\uf00c  Yes" : "\uf00c  Pair"
+                        color: acceptable ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
+                        content.color: acceptable ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
+                        onClicked: {
+                            if (root.pairingMode === "confirm")
+                                root.answerPairing("yes");
+                            else
+                                root.submitPairingInput();
+                        }
                             }
                         }
                     }
