@@ -76,8 +76,8 @@ PanelWindow {
             width: root.cardWidth
             height: root.cardHeight
             radius: 16
-            color: Colors.palette.m3surfaceContainerLowest
-            border.color: Colors.palette.m3outlineVariant
+            color: Colors.palette.surfaceContainerLowest
+            border.color: Colors.palette.outlineVariant
             content.text: ""
 
             MouseArea {

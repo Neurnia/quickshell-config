@@ -234,7 +234,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: "\uf293  Bluetooth configuration"
-                    color: Colors.palette.m3onSurface
+                    color: Colors.palette.onSurface
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
@@ -251,7 +251,7 @@ OverlayDialog {
                             return "\uf293  No connected devices";
                         return BluetoothState.connectedCount === 1 ? "\uf00c  1 connected device" : `\uf00c  ${BluetoothState.connectedCount} connected devices`;
                     }
-                    color: Colors.palette.m3onSurfaceVariant
+                    color: Colors.palette.onSurfaceVariant
                     font.pixelSize: 10
                     elide: Text.ElideRight
                 }
@@ -273,8 +273,8 @@ OverlayDialog {
                     height: 30
                     radius: height * 0.2
                     content.text: BluetoothState.discovering ? "\uf110  Scan" : "\uf2f1  Scan"
-                    color: BluetoothState.discovering ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                    content.color: BluetoothState.discovering ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
+                    color: BluetoothState.discovering ? Colors.palette.secondary : Colors.palette.surfaceVariant
+                    content.color: BluetoothState.discovering ? Colors.palette.onSecondary : Colors.palette.onSurface
                     onClicked: {
                         if (BluetoothState.discovering)
                             BluetoothState.stopDiscovery();
@@ -291,7 +291,7 @@ OverlayDialog {
                     height: 30
                     radius: height * 0.2
                     content.text: "\uf00d"
-                    color: Colors.palette.m3surfaceVariant
+                    color: Colors.palette.surfaceVariant
                     onClicked: root.close()
                 }
             }
@@ -300,7 +300,7 @@ OverlayDialog {
         Rectangle {
             width: parent.width
             height: 1
-            color: Colors.palette.m3outlineVariant
+            color: Colors.palette.outlineVariant
             opacity: 0.35
         }
 
@@ -328,7 +328,7 @@ OverlayDialog {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: itemDelegate.modelData.kind === "header"
                     text: itemDelegate.modelData.kind === "header" ? `${itemDelegate.modelData.icon}  ${itemDelegate.modelData.title}` : ""
-                    color: Colors.palette.m3onSurface
+                    color: Colors.palette.onSurface
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
                 }
@@ -338,7 +338,7 @@ OverlayDialog {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: itemDelegate.modelData.kind === "header"
                     text: itemDelegate.modelData.kind === "header" ? itemDelegate.modelData.count : ""
-                    color: Colors.palette.m3onSurfaceVariant
+                    color: Colors.palette.onSurfaceVariant
                     font.pixelSize: 9
                 }
 
@@ -354,7 +354,7 @@ OverlayDialog {
                     radius: height * 0.16
                     visible: itemDelegate.modelData.kind === "device"
                     content.text: ""
-                    color: device?.connected ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
+                    color: device?.connected ? Colors.palette.secondary : Colors.palette.surfaceVariant
                     onClicked: {
                         root.unpairCandidate = null;
                         if (BluetoothState.isKnown(device))
@@ -368,7 +368,7 @@ OverlayDialog {
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
                         text: BluetoothState.deviceIcon(deviceRow.device)
-                        color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
+                        color: deviceRow.device?.connected ? Colors.palette.onSecondary : Colors.palette.onSurface
                         font.pixelSize: 16
                     }
 
@@ -383,7 +383,7 @@ OverlayDialog {
                         AppText {
                             width: parent.width
                             text: BluetoothState.deviceName(deviceRow.device)
-                            color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
+                            color: deviceRow.device?.connected ? Colors.palette.onSecondary : Colors.palette.onSurface
                             font.pixelSize: 11
                             font.weight: deviceRow.device?.connected ? Font.DemiBold : Font.Normal
                             elide: Text.ElideRight
@@ -399,7 +399,7 @@ OverlayDialog {
                                     return `${status}  ·  \uf240 ${Math.round(deviceRow.device.battery * 100)}%`;
                                 return status;
                             }
-                            color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
+                            color: deviceRow.device?.connected ? Colors.palette.onSecondary : Colors.palette.onSurfaceVariant
                             font.pixelSize: 9
                             elide: Text.ElideRight
                         }
@@ -430,7 +430,7 @@ OverlayDialog {
                                 return "\uf0c1";
                             }
                             color: "transparent"
-                            content.color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
+                            content.color: deviceRow.device?.connected ? Colors.palette.onSecondary : Colors.palette.onSurfaceVariant
                             onClicked: {
                                 root.unpairCandidate = null;
                                 if (BluetoothState.isKnown(deviceRow.device))
@@ -452,8 +452,8 @@ OverlayDialog {
                             visible: BluetoothState.isKnown(deviceRow.device)
                             radius: height * 0.22
                             content.text: confirming ? "\uf00c" : "\uf1f8"
-                            color: confirming ? Colors.palette.m3error : "transparent"
-                            content.color: confirming ? Colors.palette.m3onError : (deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant)
+                            color: confirming ? Colors.palette.error : "transparent"
+                            content.color: confirming ? Colors.palette.onError : (deviceRow.device?.connected ? Colors.palette.onSecondary : Colors.palette.onSurfaceVariant)
                             onClicked: root.requestUnpair(deviceRow.device)
                         }
                     }
@@ -473,7 +473,7 @@ OverlayDialog {
                         return "\uf110  Looking for nearby devices…";
                     return "\uf293  No Bluetooth devices found";
                 }
-                color: Colors.palette.m3onSurfaceVariant
+                color: Colors.palette.onSurfaceVariant
                 font.pixelSize: 11
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
@@ -493,7 +493,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: BluetoothState.deviceIcon(root.selectedDevice)
-                    color: Colors.palette.m3onSurface
+                    color: Colors.palette.onSurface
                     font.pixelSize: 30
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -501,7 +501,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: root.selectedDevice ? `Pair with ${BluetoothState.deviceName(root.selectedDevice)}` : ""
-                    color: Colors.palette.m3onSurface
+                    color: Colors.palette.onSurface
                     font.pixelSize: 14
                     font.weight: Font.DemiBold
                     horizontalAlignment: Text.AlignHCenter
@@ -511,7 +511,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: root.pairingError || root.pairingMessage
-                    color: root.pairingError ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
+                    color: root.pairingError ? Colors.palette.error : Colors.palette.onSurfaceVariant
                     font.pixelSize: 10
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
@@ -522,7 +522,7 @@ OverlayDialog {
                     height: root.pairingCode ? 52 : 0
                     visible: root.pairingCode !== ""
                     text: root.pairingCode
-                    color: Colors.palette.m3onSurface
+                    color: Colors.palette.onSurface
                     font.pixelSize: 28
                     font.weight: Font.DemiBold
                     font.letterSpacing: 3
@@ -535,9 +535,9 @@ OverlayDialog {
                     height: root.pairingMode === "input" ? 42 : 0
                     visible: root.pairingMode === "input"
                     radius: 8
-                    color: Colors.palette.m3surfaceVariant
+                    color: Colors.palette.surfaceVariant
                     border.width: 1
-                    border.color: pairingInput.activeFocus ? Colors.palette.m3outline : "transparent"
+                    border.color: pairingInput.activeFocus ? Colors.palette.outline : "transparent"
 
                     TextInput {
                         id: pairingInput
@@ -547,9 +547,9 @@ OverlayDialog {
                         anchors.right: parent.right
                         anchors.rightMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
-                        color: Colors.palette.m3onSurface
-                        selectionColor: Colors.palette.m3secondary
-                        selectedTextColor: Colors.palette.m3onSecondary
+                        color: Colors.palette.onSurface
+                        selectionColor: Colors.palette.secondary
+                        selectedTextColor: Colors.palette.onSecondary
                         font.family: Typography.fontFamily
                         font.pixelSize: 11
                         inputMethodHints: Qt.ImhDigitsOnly
@@ -577,7 +577,7 @@ OverlayDialog {
                         height: parent.height
                         radius: height * 0.2
                         content.text: "\uf060  Back"
-                        color: Colors.palette.m3surfaceVariant
+                        color: Colors.palette.surfaceVariant
                         onClicked: root.showDeviceList()
                     }
 
@@ -590,7 +590,7 @@ OverlayDialog {
                         visible: root.pairingMode === "confirm"
                         radius: height * 0.2
                         content.text: "\uf00d  No"
-                        color: Colors.palette.m3surfaceVariant
+                        color: Colors.palette.surfaceVariant
                         onClicked: {
                             root.answerPairing("no");
                             root.showDeviceList();
@@ -609,8 +609,8 @@ OverlayDialog {
                         visible: root.pairingMode === "confirm" || root.pairingMode === "input"
                         radius: height * 0.2
                         content.text: root.pairingMode === "confirm" ? "\uf00c  Yes" : "\uf00c  Pair"
-                        color: acceptable ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                        content.color: acceptable ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
+                        color: acceptable ? Colors.palette.secondary : Colors.palette.surfaceVariant
+                        content.color: acceptable ? Colors.palette.onSecondary : Colors.palette.onSurfaceVariant
                         onClicked: {
                             if (root.pairingMode === "confirm")
                                 root.answerPairing("yes");

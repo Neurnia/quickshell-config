@@ -14,7 +14,7 @@ Capsule {
     signal canceled
     signal wheel(var event)
 
-    border.color: hovered && actionEnabled ? Colors.palette.m3outline : "transparent"
+    border.color: hovered && actionEnabled ? Colors.palette.outline : "transparent"
 
     HoverHandler {
         id: hoverHandler

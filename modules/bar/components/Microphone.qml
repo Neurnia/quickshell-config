@@ -5,9 +5,9 @@ import qs.services
 ActionCapsule {
     width: 70
     content.text: `${AudioInput.icon} ${AudioInput.percentage}%`
-    color: AudioInput.inUse ? Colors.palette.m3errorContainer : Colors.palette.m3surfaceVariant
-    content.color: AudioInput.inUse ? Colors.palette.m3onErrorContainer : Colors.palette.m3onSurface
-    border.color: AudioInput.inUse || hovered ? Colors.palette.m3outline : "transparent"
+    color: AudioInput.inUse ? Colors.palette.errorContainer : Colors.palette.surfaceVariant
+    content.color: AudioInput.inUse ? Colors.palette.onErrorContainer : Colors.palette.onSurface
+    border.color: AudioInput.inUse || hovered ? Colors.palette.outline : "transparent"
 
     Behavior on color {
         ColorAnimation {

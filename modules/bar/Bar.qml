@@ -15,7 +15,7 @@ PanelWindow {
         right: true
     }
     implicitHeight: 25
-    color: Colors.palette.m3surfaceContainerLow
+    color: Colors.palette.surfaceContainerLow
 
     Title {
         anchors.centerIn: parent

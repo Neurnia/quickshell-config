@@ -37,7 +37,7 @@ Item {
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
         }
-        border.color: root.menuOpen || hovered ? Colors.palette.m3outline : "transparent"
+        border.color: root.menuOpen || hovered ? Colors.palette.outline : "transparent"
         onHoveredChanged: {
             if (hovered)
                 root.menuOpen = true;
@@ -66,7 +66,7 @@ Item {
         Capsule {
             anchors.fill: parent
             radius: height * 0.045
-            color: Colors.palette.m3surfaceContainerLowest
+            color: Colors.palette.surfaceContainerLowest
 
             HoverHandler {
                 id: panelHover
@@ -83,7 +83,7 @@ Item {
                     height: 50
                     radius: height * 0.16
                     content.text: ""
-                    color: Colors.palette.m3surfaceVariant
+                    color: Colors.palette.surfaceVariant
 
                     AppText {
                         anchors.left: parent.left
@@ -105,7 +105,7 @@ Item {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 7
                         text: root.details
-                        color: Colors.palette.m3onSurfaceVariant
+                        color: Colors.palette.onSurfaceVariant
                         font.pixelSize: 9
                         elide: Text.ElideRight
                     }
@@ -124,8 +124,8 @@ Item {
                         radius: height * 0.18
                         content.text: `${root.toggleIcon}  ${root.toggleText}`
                         content.elide: Text.ElideRight
-                        color: root.toggleActive ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                        content.color: root.toggleActive ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
+                        color: root.toggleActive ? Colors.palette.secondary : Colors.palette.surfaceVariant
+                        content.color: root.toggleActive ? Colors.palette.onSecondary : Colors.palette.onSurface
                         onClicked: root.toggleRequested()
                     }
 
@@ -136,7 +136,7 @@ Item {
                         radius: height * 0.18
                         content.text: `\uf013  ${root.configText}`
                         content.elide: Text.ElideRight
-                        color: Colors.palette.m3surfaceVariant
+                        color: Colors.palette.surfaceVariant
                         onClicked: {
                             root.menuOpen = false;
                             root.configRequested();

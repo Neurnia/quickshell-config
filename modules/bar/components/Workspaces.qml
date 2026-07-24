@@ -14,8 +14,8 @@ Row {
             width: 20
             radius: height / 4
 
-            color: modelData.focused ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-            content.color: modelData.focused ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
+            color: modelData.focused ? Colors.palette.secondary : Colors.palette.surfaceVariant
+            content.color: modelData.focused ? Colors.palette.onSecondary : Colors.palette.onSurface
 
             onClicked: Hyprland.dispatch(`workspace ${modelData.id}`)
         }

@@ -21,8 +21,8 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         radius: 9
-        color: Colors.palette.m3surfaceContainerHigh
-        border.color: Colors.palette.m3outlineVariant
+        color: Colors.palette.surfaceContainerHigh
+        border.color: Colors.palette.outlineVariant
 
         Row {
             anchors.fill: parent
@@ -34,7 +34,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 26
                 text: Audio.icon
-                color: Colors.palette.m3onSurface
+                color: Colors.palette.onSurface
                 font.pixelSize: 20
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -44,13 +44,13 @@ PanelWindow {
                 width: 188
                 height: 5
                 radius: height / 2
-                color: Colors.palette.m3surfaceVariant
+                color: Colors.palette.surfaceVariant
 
                 Rectangle {
                     width: parent.width * Math.min(Audio.volume, 1)
                     height: parent.height
                     radius: parent.radius
-                    color: Colors.palette.m3primary
+                    color: Colors.palette.primary
 
                     Behavior on width {
                         NumberAnimation {
@@ -64,7 +64,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 42
                 text: `${Audio.percentage}%`
-                color: Colors.palette.m3onSurface
+                color: Colors.palette.onSurface
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignRight
             }

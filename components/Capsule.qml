@@ -9,7 +9,7 @@ Rectangle {
     width: content.width + 20
     antialiasing: true
     radius: height / 2
-    color: Colors.palette.m3surfaceVariant
+    color: Colors.palette.surfaceVariant
     border.color: "transparent"
     border.width: 1
 

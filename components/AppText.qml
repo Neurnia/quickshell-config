@@ -2,6 +2,6 @@ import QtQuick
 import qs.services
 
 Text {
-    color: Colors.palette.m3onSurface
+    color: Colors.palette.onSurface
     font.family: Typography.fontFamily
 }

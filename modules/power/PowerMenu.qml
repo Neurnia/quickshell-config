@@ -204,14 +204,14 @@ OverlayDialog {
 
                 AppText {
                     text: "\uf011  Session"
-                    color: Colors.palette.m3onSurface
+                    color: Colors.palette.onSurface
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
                 }
 
                 AppText {
                     text: "Arrow keys to navigate  ·  Esc to cancel"
-                    color: Colors.palette.m3onSurfaceVariant
+                    color: Colors.palette.onSurfaceVariant
                     font.pixelSize: 9
                 }
             }
@@ -223,7 +223,7 @@ OverlayDialog {
                 height: 30
                 radius: height * 0.2
                 content.text: "\uf00d"
-                color: Colors.palette.m3surfaceVariant
+                color: Colors.palette.surfaceVariant
                 onClicked: root.close()
             }
         }
@@ -231,7 +231,7 @@ OverlayDialog {
         Rectangle {
             width: parent.width
             height: 1
-            color: Colors.palette.m3outlineVariant
+            color: Colors.palette.outlineVariant
             opacity: 0.35
         }
 
@@ -259,7 +259,7 @@ OverlayDialog {
                     property real holdScale: activelyHolding ? 0.985 : 1
                     property real feedbackOffset: 0
                     property real feedbackScale: 1
-                    readonly property color actionColor: modelData.id === "shutdown" ? Colors.palette.m3errorContainer : Colors.palette.m3tertiaryContainer
+                    readonly property color actionColor: modelData.id === "shutdown" ? Colors.palette.errorContainer : Colors.palette.tertiaryContainer
 
                     anchors.verticalCenter: undefined
                     width: (actionGrid.width - actionGrid.spacing) / 2
@@ -267,9 +267,9 @@ OverlayDialog {
                     radius: 10
                     clip: true
                     content.text: ""
-                    color: Colors.palette.m3surfaceVariant
+                    color: Colors.palette.surfaceVariant
                     border.width: selected ? 2 : 1
-                    border.color: selected ? Colors.palette.m3outline : "transparent"
+                    border.color: selected ? Colors.palette.outline : "transparent"
                     onHoveredChanged: {
                         if (hovered)
                             root.selectedIndex = actionButton.index;
@@ -341,14 +341,14 @@ OverlayDialog {
                         AppText {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: actionButton.modelData.icon
-                            color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding) ? Colors.palette.m3error : Colors.palette.m3onSurface
+                            color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding) ? Colors.palette.error : Colors.palette.onSurface
                             font.pixelSize: 22
                         }
 
                         AppText {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: actionButton.modelData.label
-                            color: Colors.palette.m3onSurface
+                            color: Colors.palette.onSurface
                             font.pixelSize: 11
                             font.weight: Font.DemiBold
                         }
@@ -356,7 +356,7 @@ OverlayDialog {
                         AppText {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: actionButton.modelData.dangerous ? "Hold to confirm" : actionButton.modelData.description
-                            color: Colors.palette.m3onSurfaceVariant
+                            color: Colors.palette.onSurfaceVariant
                             font.pixelSize: 8
                         }
                     }
@@ -474,7 +474,7 @@ OverlayDialog {
                     }
                     return "\uf25a  Hold Restart or Shut down for 1.2 seconds";
                 }
-                color: root.showHoldHint ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
+                color: root.showHoldHint ? Colors.palette.error : Colors.palette.onSurfaceVariant
                 font.pixelSize: 9
             }
         }
