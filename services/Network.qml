@@ -21,6 +21,8 @@ Singleton {
     property var networks: []
     property var savedNetworks: []
     property bool refreshing: false
+    property bool busy: false
+    property string actionName: ""
     property int pendingReads: 0
 
     readonly property string icon: {
@@ -84,6 +86,40 @@ Singleton {
         pendingReads = Math.max(0, pendingReads - 1);
         if (pendingReads === 0)
             refreshing = false;
+    }
+
+    function toggleWifi(): void {
+        if (busy)
+            return;
+
+        busy = true;
+        actionName = wifiEnabled ? "Turning Wi-Fi off" : "Turning Wi-Fi on";
+        actionRunner.exec(["nmcli", "radio", "wifi", wifiEnabled ? "off" : "on"]);
+    }
+
+    function rescan(): void {
+        if (busy || !wifiEnabled)
+            return;
+
+        busy = true;
+        actionName = "Scanning";
+        actionRunner.exec(["nmcli", "device", "wifi", "rescan"]);
+    }
+
+    function canConnect(network): bool {
+        return network && !network.active && (network.saved || !network.secured);
+    }
+
+    function connectNetwork(network): void {
+        if (busy || !canConnect(network))
+            return;
+
+        busy = true;
+        actionName = `Connecting to ${network.name}`;
+        if (network.saved)
+            actionRunner.exec(["nmcli", "connection", "up", "id", network.name]);
+        else
+            actionRunner.exec(["nmcli", "device", "wifi", "connect", network.name]);
     }
 
     function parseStatus(output: string): void {
@@ -248,6 +284,26 @@ Singleton {
                 const address = text.trim().split("\n")[0] || "";
                 root.ipAddress = address.split("/")[0];
             }
+        }
+    }
+
+    Process {
+        id: actionRunner
+        onExited: {
+            root.busy = false;
+            root.actionName = "";
+            actionRefresh.restart();
+        }
+    }
+
+    Timer {
+        id: actionRefresh
+        interval: 600
+        onTriggered: {
+            if (root.refreshing)
+                restart();
+            else
+                root.refresh();
         }
     }
 

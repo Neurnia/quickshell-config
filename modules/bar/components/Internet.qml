@@ -60,7 +60,7 @@ Capsule {
         property bool hover: panelHover.hovered
         readonly property int panelWidth: 250
         readonly property int rowCount: Math.max(1, root.visibleNetworks.length)
-        readonly property int panelHeight: 88 + rowCount * 30
+        readonly property int panelHeight: 118 + rowCount * 30
 
         implicitWidth: panelWidth
         implicitHeight: panelHeight
@@ -122,6 +122,60 @@ Capsule {
                     }
                 }
 
+                Row {
+                    width: parent.width
+                    height: 26
+                    spacing: 4
+
+                    Capsule {
+                        id: wifiButton
+
+                        anchors.verticalCenter: undefined
+                        width: (parent.width - parent.spacing) / 2
+                        height: parent.height
+                        radius: height * 0.18
+                        content.text: `\uf1eb  Wi-Fi ${Network.wifiEnabled ? "on" : "off"}`
+                        color: Network.wifiEnabled ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
+                        content.color: Network.wifiEnabled ? Colors.palette.m3onSecondary : Colors.palette.m3onSurface
+                        border.color: wifiHover.hovered ? Colors.palette.m3outline : "transparent"
+
+                        HoverHandler {
+                            id: wifiHover
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Network.busy ? Qt.ArrowCursor : Qt.PointingHandCursor
+                            onClicked: Network.toggleWifi()
+                        }
+                    }
+
+                    Capsule {
+                        id: scanButton
+
+                        anchors.verticalCenter: undefined
+                        width: (parent.width - parent.spacing) / 2
+                        height: parent.height
+                        radius: height * 0.18
+                        content.text: Network.busy ? `\uf110  ${Network.actionName || "Working"}` : "\uf2f1  Scan"
+                        content.elide: Text.ElideRight
+                        color: Colors.palette.m3surfaceVariant
+                        border.color: scanHover.hovered && Network.wifiEnabled && !Network.busy ? Colors.palette.m3outline : "transparent"
+
+                        HoverHandler {
+                            id: scanHover
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Network.wifiEnabled && !Network.busy ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: Network.rescan()
+                        }
+                    }
+                }
+
                 Text {
                     width: parent.width
                     height: 18
@@ -147,6 +201,7 @@ Capsule {
                         radius: height * 0.18
                         content.text: ""
                         color: modelData.active ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
+                        border.color: networkHover.hovered && Network.canConnect(modelData) ? Colors.palette.m3outline : "transparent"
 
                         Text {
                             anchors.left: parent.left
@@ -170,6 +225,17 @@ Capsule {
                             color: networkRow.modelData.active ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
                             font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 9
+                        }
+
+                        HoverHandler {
+                            id: networkHover
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Network.canConnect(networkRow.modelData) && !Network.busy ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: Network.connectNetwork(networkRow.modelData)
                         }
                     }
                 }
