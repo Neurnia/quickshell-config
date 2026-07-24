@@ -2,102 +2,173 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Widgets
 import Quickshell.Io
-import qs.services
 import qs.components
+import qs.services
 
 Capsule {
     id: root
+
     property Panel panel: Panel {}
     property Actions actions: Actions {}
-    property bool hover: buttonHover.hovered || root.panel.hover
-    property bool isExpanded: false
+    property bool menuOpen: false
+    property var pendingAction: null
 
-    width: root.isExpanded ? root.content.width * 1.2 : root.height
+    width: height
+    content.text: "\uf011"
+    border.color: menuOpen || buttonHover.hovered ? Colors.palette.m3outline : "transparent"
 
-    border.color: isExpanded ? Colors.palette.m3outline : "transparent"
-
-    content {
-        text: "Power & Session"
-        visible: root.isExpanded ? true : false
+    function closeMenu(): void {
+        pendingAction = null;
+        menuOpen = false;
     }
 
-    IconImage {
-        implicitSize: parent.height
-        anchors.left: parent.left
-        source: `file://${Paths.iconDir}/system-shutdown.svg`
-        visible: root.isExpanded ? false : true
+    function confirmPendingAction(): void {
+        if (!pendingAction)
+            return;
+
+        actions.runner.exec(pendingAction.command);
+        closeMenu();
     }
 
     HoverHandler {
         id: buttonHover
     }
 
-    Behavior on width {
-        NumberAnimation {
-            duration: 100
-            easing.type: Easing.OutCubic
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton
+        cursorShape: Qt.PointingHandCursor
+
+        onClicked: {
+            if (root.menuOpen)
+                root.closeMenu();
+            else
+                root.menuOpen = true;
         }
     }
 
-    // panel
     component Panel: PopupWindow {
-        property bool hover: panelHover.hovered
+        id: panel
 
-        implicitWidth: 180
-        implicitHeight: 100
+        readonly property int panelWidth: 183
+        readonly property int panelHeight: 94
+        readonly property int buttonWidth: 180
+        readonly property int buttonHeight: 25
+        readonly property int buttonSpacing: 3
 
-        visible: root.isExpanded ? true : false
+        implicitWidth: panelWidth
+        implicitHeight: panelHeight
+        visible: root.menuOpen
         color: "transparent"
 
         Capsule {
-            anchors.centerIn: parent
-            height: parent.height * 0.9
-            width: parent.width
+            anchors.fill: parent
             radius: height * 0.1
-
             color: Colors.palette.m3surfaceContainerLowest
 
-            HoverHandler {
-                id: panelHover
-            }
-
             Column {
-                id: panelColumn
                 anchors.centerIn: parent
-                height: parent.height - 6
-                width: parent.width - 6
+                spacing: panel.buttonSpacing
+                visible: root.pendingAction === null
 
-                spacing: 3
                 Repeater {
-                    id: panelRepeater
                     model: root.actions.list
+
                     Capsule {
-                        id: panelButton
+                        id: actionButton
+
                         required property var modelData
+
                         anchors.verticalCenter: undefined
-                        height: panelColumn.height / panelRepeater.count
-                        width: panelColumn.width
+                        width: panel.buttonWidth
+                        height: panel.buttonHeight
                         radius: height * 0.1
+                        content.text: modelData.description
+                        border.color: actionHover.hovered ? Colors.palette.m3outline : "transparent"
 
-                        border.color: panelButtonHover.hovered ? Colors.palette.m3outline : "transparent"
-
-                        content.text: modelData.desc
-
-                        IconImage {
-                            anchors.left: panelButton.left
-                            implicitSize: panelButton.height * 0.8
-                            source: `file://${Paths.iconDir}/system-${panelButton.modelData.icon}.svg`
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 7
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: actionButton.modelData.icon
+                            color: Colors.palette.m3onSurface
+                            font.family: "JetBrainsMono Nerd Font"
                         }
 
                         HoverHandler {
-                            id: panelButtonHover
+                            id: actionHover
                         }
 
                         MouseArea {
-                            anchors.fill: panelButton
-                            onClicked: root.actions.runner.exec(["sh", "-c", panelButton.modelData.cmd])
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.pendingAction = actionButton.modelData
+                        }
+                    }
+                }
+            }
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 8
+                visible: root.pendingAction !== null
+
+                Text {
+                    width: panel.buttonWidth
+                    text: root.pendingAction ? `${root.pendingAction.icon}  Confirm ${root.pendingAction.description.toLowerCase()}?` : ""
+                    color: Colors.palette.m3onSurface
+                    font.family: "JetBrainsMono Nerd Font"
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Row {
+                    spacing: 6
+
+                    Capsule {
+                        id: backButton
+
+                        anchors.verticalCenter: undefined
+                        width: 87
+                        height: panel.buttonHeight
+                        radius: height * 0.1
+                        content.text: "\uf060  Back"
+                        border.color: backHover.hovered ? Colors.palette.m3outline : "transparent"
+
+                        HoverHandler {
+                            id: backHover
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.pendingAction = null
+                        }
+                    }
+
+                    Capsule {
+                        id: confirmButton
+
+                        anchors.verticalCenter: undefined
+                        width: 87
+                        height: panel.buttonHeight
+                        radius: height * 0.1
+                        color: Colors.palette.m3secondary
+                        content.text: "\uf00c  Confirm"
+                        content.color: Colors.palette.m3onSecondary
+                        border.color: confirmHover.hovered ? Colors.palette.m3outline : "transparent"
+
+                        HoverHandler {
+                            id: confirmHover
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.confirmPendingAction()
                         }
                     }
                 }
@@ -105,44 +176,24 @@ Capsule {
         }
     }
 
-    // hide timer
-    onHoverChanged: {
-        if (hover) {
-            hideTimer.stop();
-            root.isExpanded = true;
-        } else {
-            hideTimer.start();
-        }
-    }
-
-    Timer {
-        id: hideTimer
-        interval: 500
-        onTriggered: root.isExpanded = false
-    }
-
-    // the actual action
     component Actions: QtObject {
         readonly property Process runner: Process {}
         readonly property var list: [shutdown, reboot, lock]
 
         readonly property var shutdown: ({
-                icon: "shutdown",
-                desc: "Shut down",
-                cmd: "systemctl poweroff",
-                check: true
-            })
+            icon: "\uf011",
+            description: "Shut down",
+            command: ["systemctl", "poweroff"]
+        })
         readonly property var reboot: ({
-                icon: "reboot",
-                desc: "Restart",
-                cmd: "systemctl reboot",
-                check: true
-            })
+            icon: "\uf2f9",
+            description: "Restart",
+            command: ["systemctl", "reboot"]
+        })
         readonly property var lock: ({
-                icon: "lock-screen",
-                desc: "Lock",
-                cmd: "hyprlock",
-                check: false
-            })
+            icon: "\uf023",
+            description: "Lock",
+            command: ["hyprlock"]
+        })
     }
 }
