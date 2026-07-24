@@ -3,6 +3,7 @@ import qs.components
 import qs.services
 
 Capsule {
+    width: 70
     content.text: `${Audio.icon} ${Audio.percentage}%`
     border.color: hover.hovered ? Colors.palette.m3outline : "transparent"
 
