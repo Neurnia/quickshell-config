@@ -346,11 +346,12 @@ OverlayDialog {
                             font.pixelSize: 9
                         }
 
-                        Capsule {
+                        ActionCapsule {
                             id: deviceRow
 
                             readonly property var device: itemDelegate.modelData.kind === "device" ? itemDelegate.modelData.device : null
 
+                            actionEnabled: !BluetoothState.deviceBusy(device)
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.width
                             height: 50
@@ -358,7 +359,13 @@ OverlayDialog {
                             visible: itemDelegate.modelData.kind === "device"
                             content.text: ""
                             color: device?.connected ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
-                            border.color: deviceHover.hovered && !BluetoothState.deviceBusy(device) ? Colors.palette.m3outline : "transparent"
+                            onClicked: {
+                                root.unpairCandidate = null;
+                                if (BluetoothState.isKnown(device))
+                                    BluetoothState.toggleDevice(device);
+                                else
+                                    root.beginPairing(device);
+                            }
 
                             AppText {
                                 anchors.left: parent.left
@@ -399,19 +406,6 @@ OverlayDialog {
                                     color: deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
                                     font.pixelSize: 9
                                     elide: Text.ElideRight
-                                }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: !BluetoothState.deviceBusy(deviceRow.device) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: {
-                                    root.unpairCandidate = null;
-                                    if (BluetoothState.isKnown(deviceRow.device))
-                                        BluetoothState.toggleDevice(deviceRow.device);
-                                    else
-                                        root.beginPairing(deviceRow.device);
                                 }
                             }
 
@@ -466,10 +460,6 @@ OverlayDialog {
                                     content.color: confirming ? Colors.palette.m3onError : (deviceRow.device?.connected ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant)
                                     onClicked: root.requestUnpair(deviceRow.device)
                                 }
-                            }
-
-                            HoverHandler {
-                                id: deviceHover
                             }
                         }
                     }
