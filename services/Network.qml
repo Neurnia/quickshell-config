@@ -147,10 +147,12 @@ Singleton {
         runnerError = "";
         pendingPassword = password;
         credentialRunner.exec(["nmcli", "--ask", "device", "wifi", "connect", network.name]);
+        credentialTimeout.restart();
     }
 
     function cancelCredentialConnection(): void {
         pendingPassword = "";
+        credentialTimeout.stop();
         if (credentialRunner.running)
             credentialRunner.signal(15);
     }
@@ -382,6 +384,7 @@ Singleton {
             const errorMessage = root.friendlyError(root.runnerError);
 
             root.pendingPassword = "";
+            credentialTimeout.stop();
             root.busy = false;
             root.actionName = "";
             root.actionPurpose = "";
@@ -394,6 +397,15 @@ Singleton {
                 root.connectionFailed(targetName, errorMessage);
 
             actionRefresh.restart();
+        }
+    }
+
+    Timer {
+        id: credentialTimeout
+        interval: 30000
+        onTriggered: {
+            if (credentialRunner.running)
+                credentialRunner.signal(15);
         }
     }
 
