@@ -54,6 +54,13 @@ PanelWindow {
         passwordInput.text = "";
     }
 
+    function showNetworkList(): void {
+        if (Network.actionPurpose === "credentials")
+            Network.cancelCredentialConnection();
+        resetAuthentication();
+        focusScope.forceActiveFocus();
+    }
+
     function chooseNetwork(network): void {
         if (!network || network.active || Network.busy)
             return;
@@ -139,7 +146,10 @@ PanelWindow {
         focus: root.shown
 
         Keys.onEscapePressed: event => {
-            root.close();
+            if (root.selectedNetwork)
+                root.showNetworkList();
+            else
+                root.close();
             event.accepted = true;
         }
 
@@ -564,7 +574,7 @@ PanelWindow {
                                 radius: height * 0.2
                                 content.text: "\uf060  Back"
                                 color: Colors.palette.m3surfaceVariant
-                                border.color: backHover.hovered && !Network.busy ? Colors.palette.m3outline : "transparent"
+                                border.color: backHover.hovered ? Colors.palette.m3outline : "transparent"
 
                                 HoverHandler {
                                     id: backHover
@@ -573,11 +583,8 @@ PanelWindow {
                                 MouseArea {
                                     anchors.fill: parent
                                     acceptedButtons: Qt.LeftButton
-                                    cursorShape: Network.busy ? Qt.ArrowCursor : Qt.PointingHandCursor
-                                    onClicked: {
-                                        if (!Network.busy)
-                                            root.resetAuthentication();
-                                    }
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.showNetworkList()
                                 }
                             }
 
