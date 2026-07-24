@@ -3,14 +3,12 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import qs.components
 import qs.services
 
-PanelWindow {
+OverlayDialog {
     id: root
 
-    property bool shown: false
     property int selectedIndex: 0
     property int holdingIndex: -1
     property int completingIndex: -1
@@ -23,20 +21,51 @@ PanelWindow {
 
     signal holdFeedbackRequested(int index, string kind)
 
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-    visible: shown
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
+    layerNamespace: "quickshell:power-menu"
+    cardWidth: 400
+    cardHeight: 300
+    onDismissRequested: root.close()
+    onEscapePressed: root.close()
+    onKeyPressed: event => {
+        if (event.isAutoRepeat) {
+            event.accepted = true;
+            return;
+        }
 
-    WlrLayershell.namespace: "quickshell:power-menu"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.exclusiveZone: -1
-    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        switch (event.key) {
+        case Qt.Key_Left:
+            root.moveSelection(-1);
+            event.accepted = true;
+            break;
+        case Qt.Key_Right:
+            root.moveSelection(1);
+            event.accepted = true;
+            break;
+        case Qt.Key_Up:
+            root.moveSelection(-2);
+            event.accepted = true;
+            break;
+        case Qt.Key_Down:
+            root.moveSelection(2);
+            event.accepted = true;
+            break;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+        case Qt.Key_Space:
+            root.beginAction(root.selectedIndex);
+            event.accepted = true;
+            break;
+        }
+    }
+    onKeyReleased: event => {
+        if (event.isAutoRepeat)
+            return;
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            if (root.holdingIndex >= 0)
+                root.cancelHold(true);
+            event.accepted = true;
+        }
+    }
 
     function open(): void {
         cancelHold(false);
@@ -46,7 +75,6 @@ PanelWindow {
         selectedIndex = 0;
         showHoldHint = false;
         shown = true;
-        Qt.callLater(() => focusScope.forceActiveFocus());
     }
 
     function close(): void {
@@ -161,89 +189,10 @@ PanelWindow {
         }
     }
 
-    FocusScope {
-        id: focusScope
-
+    Column {
         anchors.fill: parent
-        focus: root.shown
-
-        Keys.onPressed: event => {
-            if (event.isAutoRepeat) {
-                event.accepted = true;
-                return;
-            }
-
-            switch (event.key) {
-            case Qt.Key_Escape:
-                root.close();
-                event.accepted = true;
-                break;
-            case Qt.Key_Left:
-                root.moveSelection(-1);
-                event.accepted = true;
-                break;
-            case Qt.Key_Right:
-                root.moveSelection(1);
-                event.accepted = true;
-                break;
-            case Qt.Key_Up:
-                root.moveSelection(-2);
-                event.accepted = true;
-                break;
-            case Qt.Key_Down:
-                root.moveSelection(2);
-                event.accepted = true;
-                break;
-            case Qt.Key_Return:
-            case Qt.Key_Enter:
-            case Qt.Key_Space:
-                root.beginAction(root.selectedIndex);
-                event.accepted = true;
-                break;
-            }
-        }
-
-        Keys.onReleased: event => {
-            if (event.isAutoRepeat)
-                return;
-            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
-                if (root.holdingIndex >= 0)
-                    root.cancelHold(true);
-                event.accepted = true;
-            }
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "#B8000000"
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                onClicked: root.close()
-            }
-        }
-
-        Capsule {
-            id: card
-
-            anchors.centerIn: parent
-            width: 400
-            height: 300
-            radius: 16
-            color: Colors.palette.m3surfaceContainerLowest
-            border.color: Colors.palette.m3outlineVariant
-            content.text: ""
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-            }
-
-            Column {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 10
+        anchors.margins: 12
+        spacing: 10
 
                 Item {
                     width: parent.width
@@ -555,7 +504,5 @@ PanelWindow {
                         font.pixelSize: 9
                     }
                 }
-            }
-        }
     }
 }
