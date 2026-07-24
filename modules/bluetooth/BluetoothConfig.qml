@@ -11,6 +11,14 @@ PanelWindow {
     id: root
 
     property bool shown: false
+    property var selectedDevice: null
+    property string pairingMode: "waiting"
+    property string pairingMessage: ""
+    property string pairingCode: ""
+    property string pairingError: ""
+    property string pairingOutputBuffer: ""
+    property int pairingStdoutLength: 0
+    property int pairingStderrLength: 0
 
     anchors {
         top: true
@@ -31,11 +39,111 @@ PanelWindow {
         shown = true;
         focusScope.forceActiveFocus();
         BluetoothState.startDiscovery();
+        Qt.callLater(() => deviceList.positionViewAtBeginning());
     }
 
     function close(): void {
         shown = false;
+        cancelPairing();
         BluetoothState.stopDiscovery();
+    }
+
+    function beginPairing(device): void {
+        if (!device || pairingRunner.running)
+            return;
+
+        selectedDevice = device;
+        pairingMode = "waiting";
+        pairingMessage = "Waiting for the device to respond…";
+        pairingCode = "";
+        pairingError = "";
+        pairingOutputBuffer = "";
+        pairingStdoutLength = 0;
+        pairingStderrLength = 0;
+        pairingInput.text = "";
+        pairingRunner.exec(["bluetoothctl", "--agent", "KeyboardDisplay", "--timeout", "90", "pair", device.address]);
+        Qt.callLater(() => focusScope.forceActiveFocus());
+    }
+
+    function showDeviceList(): void {
+        cancelPairing();
+        selectedDevice = null;
+        pairingMode = "waiting";
+        pairingMessage = "";
+        pairingCode = "";
+        pairingError = "";
+        pairingInput.text = "";
+        focusScope.forceActiveFocus();
+    }
+
+    function cancelPairing(): void {
+        if (pairingRunner.running)
+            pairingRunner.signal(15);
+        if (selectedDevice?.pairing)
+            selectedDevice.cancelPair();
+    }
+
+    function cleanPairingOutput(output: string): string {
+        return output.replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "").replace(/\r/g, "");
+    }
+
+    function handlePairingOutput(output: string): void {
+        pairingOutputBuffer = (pairingOutputBuffer + cleanPairingOutput(output)).slice(-600);
+        const cleaned = pairingOutputBuffer;
+        let match = cleaned.match(/Confirm passkey\s+([0-9]+)/i);
+        if (match) {
+            pairingMode = "confirm";
+            pairingCode = match[1];
+            pairingMessage = "Check that this code matches the one shown on the device.";
+            pairingOutputBuffer = "";
+            return;
+        }
+
+        match = cleaned.match(/Passkey:\s*([0-9]+)/i);
+        if (match) {
+            pairingCode = match[1];
+            pairingMessage = "Enter this passkey on the Bluetooth device.";
+        }
+
+        if (/Enter (?:PIN code|passkey)/i.test(cleaned)) {
+            pairingMode = "input";
+            pairingMessage = "Enter the PIN or passkey shown by the device.";
+            pairingOutputBuffer = "";
+            Qt.callLater(() => pairingInput.forceActiveFocus());
+        }
+
+        if (/Pairing successful/i.test(cleaned)) {
+            pairingMode = "waiting";
+            pairingMessage = "Pairing complete. Connecting…";
+            pairingOutputBuffer = "";
+        }
+
+        const failure = cleaned.match(/Failed to pair:\s*(.+)/i)
+            || cleaned.match(/AuthenticationFailed/i)
+            || cleaned.match(/AuthenticationCanceled/i)
+            || cleaned.match(/ConnectionAttemptFailed/i);
+        if (failure) {
+            pairingMode = "failed";
+            pairingError = failure[1] || "The device rejected the pairing request.";
+            pairingOutputBuffer = "";
+        }
+    }
+
+    function answerPairing(answer: string): void {
+        if (!pairingRunner.running)
+            return;
+        pairingRunner.write(answer + "\n");
+        pairingOutputBuffer = "";
+        pairingMode = "waiting";
+        pairingMessage = "Waiting for the device to finish pairing…";
+        pairingInput.text = "";
+        focusScope.forceActiveFocus();
+    }
+
+    function submitPairingInput(): void {
+        const answer = pairingInput.text.trim();
+        if (answer !== "")
+            answerPairing(answer);
     }
 
     IpcHandler {
@@ -57,6 +165,44 @@ PanelWindow {
         }
     }
 
+    Process {
+        id: pairingRunner
+
+        stdinEnabled: true
+
+        stdout: StdioCollector {
+            waitForEnd: false
+            onDataChanged: {
+                const chunk = text.slice(root.pairingStdoutLength);
+                root.pairingStdoutLength = text.length;
+                root.handlePairingOutput(chunk);
+            }
+        }
+
+        stderr: StdioCollector {
+            waitForEnd: false
+            onDataChanged: {
+                const chunk = text.slice(root.pairingStderrLength);
+                root.pairingStderrLength = text.length;
+                root.handlePairingOutput(chunk);
+            }
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            if (!root.selectedDevice)
+                return;
+
+            if (exitCode === 0) {
+                root.selectedDevice.trusted = true;
+                root.selectedDevice.connect();
+                root.showDeviceList();
+            } else if (!root.pairingError && root.shown) {
+                root.pairingMode = "failed";
+                root.pairingError = "Pairing was cancelled or could not be completed.";
+            }
+        }
+    }
+
     FocusScope {
         id: focusScope
 
@@ -64,7 +210,10 @@ PanelWindow {
         focus: root.shown
 
         Keys.onEscapePressed: event => {
-            root.close();
+            if (root.selectedDevice)
+                root.showDeviceList();
+            else
+                root.close();
             event.accepted = true;
         }
 
@@ -216,6 +365,7 @@ PanelWindow {
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     model: BluetoothState.enabled ? BluetoothState.displayItems : []
+                    visible: root.selectedDevice === null
 
                     delegate: Item {
                         id: itemDelegate
@@ -329,7 +479,12 @@ PanelWindow {
                                 anchors.fill: parent
                                 acceptedButtons: Qt.LeftButton
                                 cursorShape: !BluetoothState.deviceBusy(deviceRow.device) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: BluetoothState.toggleDevice(deviceRow.device)
+                                onClicked: {
+                                    if (BluetoothState.isKnown(deviceRow.device))
+                                        BluetoothState.toggleDevice(deviceRow.device);
+                                    else
+                                        root.beginPairing(deviceRow.device);
+                                }
                             }
                         }
                     }
@@ -352,6 +507,184 @@ PanelWindow {
                         font.pixelSize: 11
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
+                    }
+                }
+
+                Item {
+                    width: parent.width
+                    height: 405
+                    visible: root.selectedDevice !== null
+
+                    Column {
+                        anchors.centerIn: parent
+                        width: 360
+                        spacing: 10
+
+                        Text {
+                            width: parent.width
+                            text: BluetoothState.deviceIcon(root.selectedDevice)
+                            color: Colors.palette.m3onSurface
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.pixelSize: 30
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: root.selectedDevice ? `Pair with ${BluetoothState.deviceName(root.selectedDevice)}` : ""
+                            color: Colors.palette.m3onSurface
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.pixelSize: 14
+                            font.weight: Font.DemiBold
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: root.pairingError || root.pairingMessage
+                            color: root.pairingError ? Colors.palette.m3error : Colors.palette.m3onSurfaceVariant
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.pixelSize: 10
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Text {
+                            width: parent.width
+                            height: root.pairingCode ? 52 : 0
+                            visible: root.pairingCode !== ""
+                            text: root.pairingCode
+                            color: Colors.palette.m3onSurface
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.pixelSize: 28
+                            font.weight: Font.DemiBold
+                            font.letterSpacing: 3
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Rectangle {
+                            width: parent.width
+                            height: root.pairingMode === "input" ? 42 : 0
+                            visible: root.pairingMode === "input"
+                            radius: 8
+                            color: Colors.palette.m3surfaceVariant
+                            border.width: 1
+                            border.color: pairingInput.activeFocus ? Colors.palette.m3outline : "transparent"
+
+                            TextInput {
+                                id: pairingInput
+
+                                anchors.left: parent.left
+                                anchors.leftMargin: 12
+                                anchors.right: parent.right
+                                anchors.rightMargin: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: Colors.palette.m3onSurface
+                                selectionColor: Colors.palette.m3secondary
+                                selectedTextColor: Colors.palette.m3onSecondary
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 11
+                                inputMethodHints: Qt.ImhDigitsOnly
+                                selectByMouse: true
+                                clip: true
+                                onAccepted: root.submitPairingInput()
+                            }
+                        }
+
+                        Item {
+                            width: 1
+                            height: 8
+                        }
+
+                        Row {
+                            width: parent.width
+                            height: 34
+                            spacing: 8
+
+                            Capsule {
+                                id: pairingBackButton
+
+                                anchors.verticalCenter: undefined
+                                width: root.pairingMode === "confirm" ? (parent.width - parent.spacing * 2) / 3 : root.pairingMode === "input" ? (parent.width - parent.spacing) / 2 : parent.width
+                                height: parent.height
+                                radius: height * 0.2
+                                content.text: "\uf060  Back"
+                                color: Colors.palette.m3surfaceVariant
+                                border.color: pairingBackHover.hovered ? Colors.palette.m3outline : "transparent"
+
+                                HoverHandler {
+                                    id: pairingBackHover
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.showDeviceList()
+                                }
+                            }
+
+                            Capsule {
+                                id: rejectPairingButton
+
+                                anchors.verticalCenter: undefined
+                                width: (parent.width - parent.spacing * 2) / 3
+                                height: parent.height
+                                visible: root.pairingMode === "confirm"
+                                radius: height * 0.2
+                                content.text: "\uf00d  No"
+                                color: Colors.palette.m3surfaceVariant
+                                border.color: rejectPairingHover.hovered ? Colors.palette.m3outline : "transparent"
+
+                                HoverHandler {
+                                    id: rejectPairingHover
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.answerPairing("no");
+                                        root.showDeviceList();
+                                    }
+                                }
+                            }
+
+                            Capsule {
+                                id: acceptPairingButton
+
+                                readonly property bool acceptable: root.pairingMode === "confirm" || (root.pairingMode === "input" && pairingInput.text.trim() !== "")
+
+                                anchors.verticalCenter: undefined
+                                width: root.pairingMode === "confirm" ? (parent.width - parent.spacing * 2) / 3 : (parent.width - parent.spacing) / 2
+                                height: parent.height
+                                visible: root.pairingMode === "confirm" || root.pairingMode === "input"
+                                radius: height * 0.2
+                                content.text: root.pairingMode === "confirm" ? "\uf00c  Yes" : "\uf00c  Pair"
+                                color: acceptable ? Colors.palette.m3secondary : Colors.palette.m3surfaceVariant
+                                content.color: acceptable ? Colors.palette.m3onSecondary : Colors.palette.m3onSurfaceVariant
+                                border.color: acceptPairingHover.hovered && acceptable ? Colors.palette.m3outline : "transparent"
+
+                                HoverHandler {
+                                    id: acceptPairingHover
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton
+                                    cursorShape: acceptPairingButton.acceptable ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: {
+                                        if (root.pairingMode === "confirm")
+                                            root.answerPairing("yes");
+                                        else
+                                            root.submitPairingInput();
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

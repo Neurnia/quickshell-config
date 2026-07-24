@@ -142,8 +142,7 @@ Singleton {
             return;
         }
 
-        device.trusted = true;
-        device.pair();
+        // New devices are paired by BluetoothConfig's interactive BlueZ agent.
     }
 
     function toggleEnabled(): void {
