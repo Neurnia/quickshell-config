@@ -10,7 +10,7 @@ Singleton {
     readonly property int maximum: Number(maximumView.text().trim()) || 1
     readonly property int current: Number(currentView.text().trim()) || 0
     readonly property int percentage: Math.round(current / maximum * 100)
-    readonly property string icon: "\uf185"
+    readonly property string icon: "󰖙"
 
     function adjust(amount: int): void {
         setter.exec([
