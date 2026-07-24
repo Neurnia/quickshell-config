@@ -40,9 +40,15 @@ PanelWindow {
         anchors.rightMargin: 5
     }
 
+    Microphone {
+        id: microphone
+        anchors.right: volume.left
+        anchors.rightMargin: 5
+    }
+
     Brightness {
         id: brightness
-        anchors.right: volume.left
+        anchors.right: microphone.left
         anchors.rightMargin: 5
     }
 
