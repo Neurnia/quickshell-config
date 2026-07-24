@@ -305,13 +305,20 @@ PanelWindow {
                             border.width: selected ? 2 : 1
                             border.color: selected ? Colors.palette.m3outline : "transparent"
 
-                            Rectangle {
+                            Item {
                                 anchors.left: parent.left
                                 anchors.top: parent.top
                                 anchors.bottom: parent.bottom
                                 width: actionButton.holding ? parent.width * root.holdProgress : 0
-                                color: actionButton.actionColor
-                                opacity: 0.8
+                                clip: true
+
+                                Rectangle {
+                                    width: actionButton.width
+                                    height: actionButton.height
+                                    radius: actionButton.radius
+                                    color: actionButton.actionColor
+                                    opacity: 0.8
+                                }
                             }
 
                             Column {
