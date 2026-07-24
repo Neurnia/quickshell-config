@@ -39,7 +39,13 @@ PanelWindow {
     }
 
     Brightness {
+        id: brightness
         anchors.right: volume.left
+        anchors.rightMargin: 5
+    }
+
+    Internet {
+        anchors.right: brightness.left
         anchors.rightMargin: 5
     }
 
