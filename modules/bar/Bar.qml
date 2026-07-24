@@ -42,6 +42,11 @@ PanelWindow {
         panel.anchor.rect.y: root.height
     }
 
+    Brightness {
+        anchors.right: volume.left
+        anchors.rightMargin: 5
+    }
+
     Workspaces {
         height: parent.height
         anchors.left: parent.left
