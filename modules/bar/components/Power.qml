@@ -13,6 +13,7 @@ Capsule {
     property Actions actions: Actions {}
     property bool menuOpen: false
     property var pendingAction: null
+    property bool hover: buttonHover.hovered || panel.hover
 
     width: height
     content.text: "\uf011"
@@ -35,6 +36,13 @@ Capsule {
         id: buttonHover
     }
 
+    Timer {
+        id: closeTimer
+        interval: 400
+        running: root.menuOpen && !root.hover
+        onTriggered: root.closeMenu()
+    }
+
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
@@ -51,6 +59,7 @@ Capsule {
     component Panel: PopupWindow {
         id: panel
 
+        property bool hover: panelHover.hovered
         readonly property int panelWidth: 183
         readonly property int panelHeight: 94
         readonly property int buttonWidth: 180
@@ -66,6 +75,10 @@ Capsule {
             anchors.fill: parent
             radius: height * 0.1
             color: Colors.palette.m3surfaceContainerLowest
+
+            HoverHandler {
+                id: panelHover
+            }
 
             Column {
                 anchors.centerIn: parent
