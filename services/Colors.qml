@@ -3,91 +3,93 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 Singleton {
     id: root
 
-    readonly property var opaquePalette: GeneratedPalette.available ? GeneratedPalette.colors : fallbackPalette.colors
     readonly property ResolvedPalette palette: ResolvedPalette {}
-    readonly property Transparency transparency: Transparency {}
     readonly property bool usingGeneratedPalette: GeneratedPalette.available
     readonly property string paletteMode: usingGeneratedPalette ? GeneratedPalette.mode : "dark"
     readonly property string paletteSource: usingGeneratedPalette ? "generated" : "fallback"
+    property real surfaceOpacity: 0.5
 
     FallbackPalette {
         id: fallbackPalette
     }
 
-    component Transparency: QtObject {
-        property real base: 0.5
-        property real elevated: 1
+    function resolveColor(role: string, fallback: color): color {
+        return usingGeneratedPalette ? GeneratedPalette.colors[role] : fallback;
+    }
+
+    IpcHandler {
+        target: "colors"
+
+        function status(): string {
+            return `${root.paletteSource} (${root.paletteMode}), surface text: ${root.palette.surfaceText}`;
+        }
     }
 
     component ResolvedPalette: QtObject {
-        readonly property color primary: root.opaquePalette.primary
-        readonly property color onPrimary: root.opaquePalette.onPrimary
-        readonly property color primaryContainer: root.opaquePalette.primaryContainer
-        readonly property color onPrimaryContainer: root.opaquePalette.onPrimaryContainer
+        readonly property color primary: root.resolveColor("primary", fallbackPalette.primaryColor)
+        readonly property color primaryText: root.resolveColor("onPrimary", fallbackPalette.primaryTextColor)
+        readonly property color primaryContainer: root.resolveColor("primaryContainer", fallbackPalette.primaryContainerColor)
+        readonly property color primaryContainerText: root.resolveColor("onPrimaryContainer", fallbackPalette.primaryContainerTextColor)
 
-        readonly property color secondary: root.opaquePalette.secondary
-        readonly property color onSecondary: root.opaquePalette.onSecondary
-        readonly property color secondaryContainer: root.opaquePalette.secondaryContainer
-        readonly property color onSecondaryContainer: root.opaquePalette.onSecondaryContainer
+        readonly property color secondary: root.resolveColor("secondary", fallbackPalette.secondaryColor)
+        readonly property color secondaryText: root.resolveColor("onSecondary", fallbackPalette.secondaryTextColor)
+        readonly property color secondaryContainer: root.resolveColor("secondaryContainer", fallbackPalette.secondaryContainerColor)
+        readonly property color secondaryContainerText: root.resolveColor("onSecondaryContainer", fallbackPalette.secondaryContainerTextColor)
 
-        readonly property color tertiary: root.opaquePalette.tertiary
-        readonly property color onTertiary: root.opaquePalette.onTertiary
-        readonly property color tertiaryContainer: root.opaquePalette.tertiaryContainer
-        readonly property color onTertiaryContainer: root.opaquePalette.onTertiaryContainer
+        readonly property color tertiary: root.resolveColor("tertiary", fallbackPalette.tertiaryColor)
+        readonly property color tertiaryText: root.resolveColor("onTertiary", fallbackPalette.tertiaryTextColor)
+        readonly property color tertiaryContainer: root.resolveColor("tertiaryContainer", fallbackPalette.tertiaryContainerColor)
+        readonly property color tertiaryContainerText: root.resolveColor("onTertiaryContainer", fallbackPalette.tertiaryContainerTextColor)
 
-        readonly property color error: root.opaquePalette.error
-        readonly property color onError: root.opaquePalette.onError
-        readonly property color errorContainer: root.opaquePalette.errorContainer
-        readonly property color onErrorContainer: root.opaquePalette.onErrorContainer
+        readonly property color error: root.resolveColor("error", fallbackPalette.errorColor)
+        readonly property color errorText: root.resolveColor("onError", fallbackPalette.errorTextColor)
+        readonly property color errorContainer: root.resolveColor("errorContainer", fallbackPalette.errorContainerColor)
+        readonly property color errorContainerText: root.resolveColor("onErrorContainer", fallbackPalette.errorContainerTextColor)
 
-        readonly property color background: root.opaquePalette.background
-        readonly property color onBackground: root.opaquePalette.onBackground
+        readonly property color background: root.resolveColor("background", fallbackPalette.backgroundColor)
+        readonly property color backgroundText: root.resolveColor("onBackground", fallbackPalette.backgroundTextColor)
 
-        readonly property color surface: Qt.alpha(root.opaquePalette.surface, root.transparency.base)
-        readonly property color onSurface: Qt.alpha(root.opaquePalette.onSurface, root.transparency.elevated)
-        readonly property color surfaceVariant: Qt.alpha(root.opaquePalette.surfaceVariant, root.transparency.base)
-        readonly property color onSurfaceVariant: Qt.alpha(root.opaquePalette.onSurfaceVariant,
-                                                           root.transparency.elevated)
+        readonly property color surface: Qt.alpha(root.resolveColor("surface", fallbackPalette.surfaceColor), root.surfaceOpacity)
+        readonly property color surfaceText: root.resolveColor("onSurface", fallbackPalette.surfaceTextColor)
+        readonly property color surfaceVariant: Qt.alpha(root.resolveColor("surfaceVariant", fallbackPalette.surfaceVariantColor), root.surfaceOpacity)
+        readonly property color surfaceVariantText: root.resolveColor("onSurfaceVariant", fallbackPalette.surfaceVariantTextColor)
 
-        readonly property color outline: root.opaquePalette.outline
-        readonly property color outlineVariant: root.opaquePalette.outlineVariant
+        readonly property color outline: root.resolveColor("outline", fallbackPalette.outlineColor)
+        readonly property color outlineVariant: root.resolveColor("outlineVariant", fallbackPalette.outlineVariantColor)
 
-        readonly property color shadow: root.opaquePalette.shadow
-        readonly property color scrim: root.opaquePalette.scrim
+        readonly property color shadow: root.resolveColor("shadow", fallbackPalette.shadowColor)
+        readonly property color scrim: root.resolveColor("scrim", fallbackPalette.scrimColor)
 
-        readonly property color inverseSurface: root.opaquePalette.inverseSurface
-        readonly property color inverseOnSurface: root.opaquePalette.inverseOnSurface
-        readonly property color inversePrimary: root.opaquePalette.inversePrimary
+        readonly property color inverseSurface: root.resolveColor("inverseSurface", fallbackPalette.inverseSurfaceColor)
+        readonly property color inverseSurfaceText: root.resolveColor("inverseOnSurface", fallbackPalette.inverseSurfaceTextColor)
+        readonly property color inversePrimary: root.resolveColor("inversePrimary", fallbackPalette.inversePrimaryColor)
 
-        readonly property color primaryFixed: root.opaquePalette.primaryFixed
-        readonly property color onPrimaryFixed: root.opaquePalette.onPrimaryFixed
-        readonly property color primaryFixedDim: root.opaquePalette.primaryFixedDim
-        readonly property color onPrimaryFixedVariant: root.opaquePalette.onPrimaryFixedVariant
+        readonly property color primaryFixed: root.resolveColor("primaryFixed", fallbackPalette.primaryFixedColor)
+        readonly property color primaryFixedText: root.resolveColor("onPrimaryFixed", fallbackPalette.primaryFixedTextColor)
+        readonly property color primaryFixedDim: root.resolveColor("primaryFixedDim", fallbackPalette.primaryFixedDimColor)
+        readonly property color primaryFixedVariantText: root.resolveColor("onPrimaryFixedVariant", fallbackPalette.primaryFixedVariantTextColor)
 
-        readonly property color secondaryFixed: root.opaquePalette.secondaryFixed
-        readonly property color onSecondaryFixed: root.opaquePalette.onSecondaryFixed
-        readonly property color secondaryFixedDim: root.opaquePalette.secondaryFixedDim
-        readonly property color onSecondaryFixedVariant: root.opaquePalette.onSecondaryFixedVariant
+        readonly property color secondaryFixed: root.resolveColor("secondaryFixed", fallbackPalette.secondaryFixedColor)
+        readonly property color secondaryFixedText: root.resolveColor("onSecondaryFixed", fallbackPalette.secondaryFixedTextColor)
+        readonly property color secondaryFixedDim: root.resolveColor("secondaryFixedDim", fallbackPalette.secondaryFixedDimColor)
+        readonly property color secondaryFixedVariantText: root.resolveColor("onSecondaryFixedVariant", fallbackPalette.secondaryFixedVariantTextColor)
 
-        readonly property color tertiaryFixed: root.opaquePalette.tertiaryFixed
-        readonly property color onTertiaryFixed: root.opaquePalette.onTertiaryFixed
-        readonly property color tertiaryFixedDim: root.opaquePalette.tertiaryFixedDim
-        readonly property color onTertiaryFixedVariant: root.opaquePalette.onTertiaryFixedVariant
+        readonly property color tertiaryFixed: root.resolveColor("tertiaryFixed", fallbackPalette.tertiaryFixedColor)
+        readonly property color tertiaryFixedText: root.resolveColor("onTertiaryFixed", fallbackPalette.tertiaryFixedTextColor)
+        readonly property color tertiaryFixedDim: root.resolveColor("tertiaryFixedDim", fallbackPalette.tertiaryFixedDimColor)
+        readonly property color tertiaryFixedVariantText: root.resolveColor("onTertiaryFixedVariant", fallbackPalette.tertiaryFixedVariantTextColor)
 
-        readonly property color surfaceDim: Qt.alpha(root.opaquePalette.surfaceDim, root.transparency.base)
-        readonly property color surfaceBright: Qt.alpha(root.opaquePalette.surfaceBright, root.transparency.base)
-        readonly property color surfaceContainerLowest: Qt.alpha(root.opaquePalette.surfaceContainerLowest,
-                                                                 root.transparency.base)
-        readonly property color surfaceContainerLow: Qt.alpha(root.opaquePalette.surfaceContainerLow,
-                                                              root.transparency.base)
-        readonly property color surfaceContainer: Qt.alpha(root.opaquePalette.surfaceContainer, root.transparency.base)
-        readonly property color surfaceContainerHigh: Qt.alpha(root.opaquePalette.surfaceContainerHigh,
-                                                               root.transparency.base)
-        readonly property color surfaceContainerHighest: Qt.alpha(root.opaquePalette.surfaceContainerHighest,
-                                                                  root.transparency.base)
+        readonly property color surfaceDim: Qt.alpha(root.resolveColor("surfaceDim", fallbackPalette.surfaceDimColor), root.surfaceOpacity)
+        readonly property color surfaceBright: Qt.alpha(root.resolveColor("surfaceBright", fallbackPalette.surfaceBrightColor), root.surfaceOpacity)
+        readonly property color surfaceContainerLowest: Qt.alpha(root.resolveColor("surfaceContainerLowest", fallbackPalette.surfaceContainerLowestColor), root.surfaceOpacity)
+        readonly property color surfaceContainerLow: Qt.alpha(root.resolveColor("surfaceContainerLow", fallbackPalette.surfaceContainerLowColor), root.surfaceOpacity)
+        readonly property color surfaceContainer: Qt.alpha(root.resolveColor("surfaceContainer", fallbackPalette.surfaceContainerColor), root.surfaceOpacity)
+        readonly property color surfaceContainerHigh: Qt.alpha(root.resolveColor("surfaceContainerHigh", fallbackPalette.surfaceContainerHighColor), root.surfaceOpacity)
+        readonly property color surfaceContainerHighest: Qt.alpha(root.resolveColor("surfaceContainerHighest", fallbackPalette.surfaceContainerHighestColor), root.surfaceOpacity)
     }
 }

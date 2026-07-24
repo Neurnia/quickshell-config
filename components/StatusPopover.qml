@@ -105,7 +105,7 @@ Item {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 7
                         text: root.details
-                        color: Colors.palette.onSurfaceVariant
+                        color: Colors.palette.surfaceVariantText
                         font.pixelSize: 9
                         elide: Text.ElideRight
                     }
@@ -125,7 +125,7 @@ Item {
                         content.text: `${root.toggleIcon}  ${root.toggleText}`
                         content.elide: Text.ElideRight
                         color: root.toggleActive ? Colors.palette.secondary : Colors.palette.surfaceVariant
-                        content.color: root.toggleActive ? Colors.palette.onSecondary : Colors.palette.onSurface
+                        content.color: root.toggleActive ? Colors.palette.secondaryText : Colors.palette.surfaceText
                         onClicked: root.toggleRequested()
                     }
 

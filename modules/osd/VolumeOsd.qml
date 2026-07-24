@@ -34,7 +34,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 26
                 text: Audio.icon
-                color: Colors.palette.onSurface
+                color: Colors.palette.surfaceText
                 font.pixelSize: 20
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -64,7 +64,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 42
                 text: `${Audio.percentage}%`
-                color: Colors.palette.onSurface
+                color: Colors.palette.surfaceText
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignRight
             }

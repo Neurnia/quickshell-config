@@ -6,7 +6,7 @@ ActionCapsule {
     width: 70
     content.text: `${AudioInput.icon} ${AudioInput.percentage}%`
     color: AudioInput.inUse ? Colors.palette.errorContainer : Colors.palette.surfaceVariant
-    content.color: AudioInput.inUse ? Colors.palette.onErrorContainer : Colors.palette.onSurface
+    content.color: AudioInput.inUse ? Colors.palette.errorContainerText : Colors.palette.surfaceText
     border.color: AudioInput.inUse || hovered ? Colors.palette.outline : "transparent"
 
     Behavior on color {

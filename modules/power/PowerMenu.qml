@@ -204,14 +204,14 @@ OverlayDialog {
 
                 AppText {
                     text: "\uf011  Session"
-                    color: Colors.palette.onSurface
+                    color: Colors.palette.surfaceText
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
                 }
 
                 AppText {
                     text: "Arrow keys to navigate  ·  Esc to cancel"
-                    color: Colors.palette.onSurfaceVariant
+                    color: Colors.palette.surfaceVariantText
                     font.pixelSize: 9
                 }
             }
@@ -341,14 +341,14 @@ OverlayDialog {
                         AppText {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: actionButton.modelData.icon
-                            color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding) ? Colors.palette.error : Colors.palette.onSurface
+                            color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding) ? Colors.palette.error : Colors.palette.surfaceText
                             font.pixelSize: 22
                         }
 
                         AppText {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: actionButton.modelData.label
-                            color: Colors.palette.onSurface
+                            color: Colors.palette.surfaceText
                             font.pixelSize: 11
                             font.weight: Font.DemiBold
                         }
@@ -356,7 +356,7 @@ OverlayDialog {
                         AppText {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: actionButton.modelData.dangerous ? "Hold to confirm" : actionButton.modelData.description
-                            color: Colors.palette.onSurfaceVariant
+                            color: Colors.palette.surfaceVariantText
                             font.pixelSize: 8
                         }
                     }
@@ -474,7 +474,7 @@ OverlayDialog {
                     }
                     return "\uf25a  Hold Restart or Shut down for 1.2 seconds";
                 }
-                color: root.showHoldHint ? Colors.palette.error : Colors.palette.onSurfaceVariant
+                color: root.showHoldHint ? Colors.palette.error : Colors.palette.surfaceVariantText
                 font.pixelSize: 9
             }
         }

@@ -138,7 +138,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: "\uf1eb  Wi-Fi configuration"
-                    color: Colors.palette.onSurface
+                    color: Colors.palette.surfaceText
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
@@ -147,7 +147,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: Network.wifiEnabled ? `${Network.icon}  ${Network.label}` : "󰤭  Wi-Fi is off"
-                    color: Colors.palette.onSurfaceVariant
+                    color: Colors.palette.surfaceVariantText
                     font.pixelSize: 10
                     elide: Text.ElideRight
                 }
@@ -215,7 +215,7 @@ OverlayDialog {
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         text: Network.wifiEnabled ? "Available networks" : "Wireless networking disabled"
-                        color: Colors.palette.onSurface
+                        color: Colors.palette.surfaceText
                         font.pixelSize: 11
                     }
 
@@ -224,7 +224,7 @@ OverlayDialog {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: Network.wifiEnabled
                         text: `${Network.networks.length} found`
-                        color: Colors.palette.onSurfaceVariant
+                        color: Colors.palette.surfaceVariantText
                         font.pixelSize: 9
                     }
                 }
@@ -270,7 +270,7 @@ OverlayDialog {
                             anchors.leftMargin: 12
                             anchors.verticalCenter: parent.verticalCenter
                             text: Network.signalIcon(networkRow.modelData.signal)
-                            color: networkRow.modelData.active ? Colors.palette.onSecondary : Colors.palette.onSurface
+                            color: networkRow.modelData.active ? Colors.palette.secondaryText : Colors.palette.surfaceText
                             font.pixelSize: 16
                         }
 
@@ -285,7 +285,7 @@ OverlayDialog {
                             AppText {
                                 width: parent.width
                                 text: networkRow.modelData.name
-                                color: networkRow.modelData.active ? Colors.palette.onSecondary : Colors.palette.onSurface
+                                color: networkRow.modelData.active ? Colors.palette.secondaryText : Colors.palette.surfaceText
                                 font.pixelSize: 11
                                 font.weight: networkRow.modelData.active ? Font.DemiBold : Font.Normal
                                 elide: Text.ElideRight
@@ -306,7 +306,7 @@ OverlayDialog {
                                         return "\uf023  Secured";
                                     return "\uf09c  Open network";
                                 }
-                                color: networkRow.modelData.active ? Colors.palette.onSecondary : Colors.palette.onSurfaceVariant
+                                color: networkRow.modelData.active ? Colors.palette.secondaryText : Colors.palette.surfaceVariantText
                                 font.pixelSize: 9
                             }
                         }
@@ -318,7 +318,7 @@ OverlayDialog {
                             anchors.rightMargin: 12
                             anchors.verticalCenter: parent.verticalCenter
                             text: `${networkRow.modelData.signal}%`
-                            color: networkRow.modelData.active ? Colors.palette.onSecondary : Colors.palette.onSurfaceVariant
+                            color: networkRow.modelData.active ? Colors.palette.secondaryText : Colors.palette.surfaceVariantText
                             font.pixelSize: 10
                         }
 
@@ -330,7 +330,7 @@ OverlayDialog {
                         width: parent.width - 40
                         visible: networkList.count === 0
                         text: Network.wifiEnabled ? (Network.busy ? "\uf110  Scanning for networks…" : "󰤭  No networks found") : "\uf1eb  Turn on Wi-Fi from the status panel"
-                        color: Colors.palette.onSurfaceVariant
+                        color: Colors.palette.surfaceVariantText
                         font.pixelSize: 11
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
@@ -349,7 +349,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: "\uf023"
-                    color: Colors.palette.onSurface
+                    color: Colors.palette.surfaceText
                     font.pixelSize: 30
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -357,7 +357,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: root.selectedNetwork ? `Connect to ${root.selectedNetwork.name}` : ""
-                    color: Colors.palette.onSurface
+                    color: Colors.palette.surfaceText
                     font.pixelSize: 14
                     font.weight: Font.DemiBold
                     horizontalAlignment: Text.AlignHCenter
@@ -367,7 +367,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: "Enter the network password"
-                    color: Colors.palette.onSurfaceVariant
+                    color: Colors.palette.surfaceVariantText
                     font.pixelSize: 10
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -380,7 +380,7 @@ OverlayDialog {
                 AppText {
                     width: parent.width
                     text: "Password"
-                    color: Colors.palette.onSurface
+                    color: Colors.palette.surfaceText
                     font.pixelSize: 10
                 }
 
@@ -401,9 +401,9 @@ OverlayDialog {
                         anchors.rightMargin: 8
                         anchors.verticalCenter: parent.verticalCenter
                         enabled: !Network.busy
-                        color: Colors.palette.onSurface
+                        color: Colors.palette.surfaceText
                         selectionColor: Colors.palette.secondary
-                        selectedTextColor: Colors.palette.onSecondary
+                        selectedTextColor: Colors.palette.secondaryText
                         font.family: Typography.fontFamily
                         font.pixelSize: 11
                         echoMode: root.passwordVisible ? TextInput.Normal : TextInput.Password
@@ -421,7 +421,7 @@ OverlayDialog {
                         anchors.rightMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.passwordVisible ? "\uf070" : "\uf06e"
-                        color: Colors.palette.onSurfaceVariant
+                        color: Colors.palette.surfaceVariantText
                         font.pixelSize: 12
 
                         MouseArea {
@@ -447,7 +447,7 @@ OverlayDialog {
                             return `\uf071  ${root.errorMessage}`;
                         return "Use at least 8 characters for WPA/WPA2/WPA3.";
                     }
-                    color: root.errorMessage ? Colors.palette.error : Colors.palette.onSurfaceVariant
+                    color: root.errorMessage ? Colors.palette.error : Colors.palette.surfaceVariantText
                     font.pixelSize: 9
                     wrapMode: Text.WordWrap
                     verticalAlignment: Text.AlignVCenter
@@ -480,7 +480,7 @@ OverlayDialog {
                         radius: height * 0.2
                         content.text: Network.busy ? "\uf110  Connecting" : "\uf00c  Connect"
                         color: root.passwordAcceptable && !Network.busy ? Colors.palette.secondary : Colors.palette.surfaceVariant
-                        content.color: root.passwordAcceptable && !Network.busy ? Colors.palette.onSecondary : Colors.palette.onSurfaceVariant
+                        content.color: root.passwordAcceptable && !Network.busy ? Colors.palette.secondaryText : Colors.palette.surfaceVariantText
                         onClicked: root.submitPassword()
                     }
                 }
