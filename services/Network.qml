@@ -101,9 +101,7 @@ Singleton {
         if (busy)
             return;
 
-        busy = true;
-        actionPurpose = "toggle";
-        runnerError = "";
+        beginAction("toggle", "");
         actionRunner.exec(["nmcli", "radio", "wifi", wifiEnabled ? "off" : "on"]);
     }
 
@@ -111,9 +109,7 @@ Singleton {
         if (busy || !wifiEnabled)
             return;
 
-        busy = true;
-        actionPurpose = "scan";
-        runnerError = "";
+        beginAction("scan", "");
         actionRunner.exec(["nmcli", "device", "wifi", "rescan"]);
     }
 
@@ -125,10 +121,7 @@ Singleton {
         if (busy || !canConnect(network))
             return;
 
-        busy = true;
-        actionPurpose = "connect";
-        connectingName = network.name;
-        runnerError = "";
+        beginAction("connect", network.name);
         if (network.saved)
             actionRunner.exec(["nmcli", "connection", "up", "id", network.name]);
         else
@@ -139,13 +132,30 @@ Singleton {
         if (busy || !network || !network.secured || network.saved || network.enterprise || !password)
             return;
 
-        busy = true;
-        actionPurpose = "credentials";
-        connectingName = network.name;
-        runnerError = "";
+        beginAction("credentials", network.name);
         pendingPassword = password;
         credentialRunner.exec(["nmcli", "--ask", "device", "wifi", "connect", network.name]);
         credentialTimeout.restart();
+    }
+
+    function beginAction(purpose: string, targetName: string): void {
+        busy = true;
+        actionPurpose = purpose;
+        connectingName = targetName;
+        runnerError = "";
+    }
+
+    function finishAction(): var {
+        const result = {
+            purpose: actionPurpose,
+            targetName: connectingName,
+            errorMessage: friendlyError(runnerError)
+        };
+        busy = false;
+        actionPurpose = "";
+        connectingName = "";
+        runnerError = "";
+        return result;
     }
 
     function cancelCredentialConnection(): void {
@@ -340,20 +350,13 @@ Singleton {
         }
 
         onExited: exitCode => {
-            const purpose = root.actionPurpose;
-            const targetName = root.connectingName;
-            const errorMessage = root.friendlyError(root.runnerError);
+            const action = root.finishAction();
 
-            root.busy = false;
-            root.actionPurpose = "";
-            root.connectingName = "";
-            root.runnerError = "";
-
-            if (purpose === "connect") {
+            if (action.purpose === "connect") {
                 if (exitCode === 0)
-                    root.connectionSucceeded(targetName);
+                    root.connectionSucceeded(action.targetName);
                 else
-                    root.connectionFailed(targetName, errorMessage);
+                    root.connectionFailed(action.targetName, action.errorMessage);
             }
 
             actionRefresh.restart();
@@ -376,20 +379,14 @@ Singleton {
         }
 
         onExited: exitCode => {
-            const targetName = root.connectingName;
-            const errorMessage = root.friendlyError(root.runnerError);
-
             root.pendingPassword = "";
             credentialTimeout.stop();
-            root.busy = false;
-            root.actionPurpose = "";
-            root.connectingName = "";
-            root.runnerError = "";
+            const action = root.finishAction();
 
             if (exitCode === 0)
-                root.connectionSucceeded(targetName);
+                root.connectionSucceeded(action.targetName);
             else
-                root.connectionFailed(targetName, errorMessage);
+                root.connectionFailed(action.targetName, action.errorMessage);
 
             actionRefresh.restart();
         }
