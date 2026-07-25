@@ -6,7 +6,15 @@ Capsule {
     id: root
 
     width: controls.implicitWidth + 8
+    clip: true
     content.text: ""
+
+    Behavior on width {
+        NumberAnimation {
+            duration: 180
+            easing.type: Easing.OutCubic
+        }
+    }
 
     component ControlSegment: Item {
         id: segment
@@ -65,7 +73,11 @@ Capsule {
     Row {
         id: controls
 
-        anchors.centerIn: parent
+        anchors {
+            right: parent.right
+            rightMargin: 4
+            verticalCenter: parent.verticalCenter
+        }
         height: parent.height - 4
         spacing: 1
 
@@ -85,6 +97,7 @@ Capsule {
 
         ControlSegment {
             height: parent.height
+            implicitWidth: 20
             visible: AudioInput.inUse || AudioInput.muted
             label: AudioInput.icon
             emphasized: AudioInput.inUse
@@ -96,6 +109,7 @@ Capsule {
 
         ControlSegment {
             height: parent.height
+            implicitWidth: 20
             visible: ScreenSharing.active
             label: ScreenSharing.icon
             emphasized: true
