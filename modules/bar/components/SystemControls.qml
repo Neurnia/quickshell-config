@@ -98,7 +98,9 @@ Capsule {
             height: parent.height
             visible: Battery.available
             label: `${Battery.icon} ${Battery.percentage}`
-            foreground: Battery.low ? Colors.palette.error : Battery.powerConnected ? Colors.palette.primary : Colors.palette.surfaceText
+            emphasized: Battery.low || Battery.powerConnected
+            foreground: Battery.low ? Colors.palette.errorContainerText : Battery.powerConnected ? Colors.palette.primaryContainerText : Colors.palette.surfaceText
+            activeBackground: Battery.low ? Colors.palette.errorContainer : Battery.powerConnected ? Colors.palette.primaryContainer : Colors.palette.surfaceContainerHigh
             actionEnabled: false
             acceptedButtons: Qt.NoButton
         }
