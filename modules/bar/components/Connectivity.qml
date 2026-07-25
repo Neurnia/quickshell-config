@@ -203,9 +203,11 @@ Item {
 
         height: 46
         radius: 8
-        color: rowHover.hovered
-            ? Colors.palette.surfaceContainerHigh
-            : Colors.palette.surfaceVariant
+        color: rowAction.pressed
+            ? Colors.palette.surfaceContainerHighest
+            : rowHover.hovered
+                ? Colors.palette.surfaceContainerHigh
+                : Colors.palette.surfaceVariant
 
         Behavior on color {
             ColorAnimation {
@@ -215,6 +217,13 @@ Item {
 
         HoverHandler {
             id: rowHover
+        }
+
+        MouseArea {
+            id: rowAction
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: row.configRequested()
         }
 
         AppText {
@@ -254,8 +263,8 @@ Item {
 
         Row {
             id: switchGroup
-            anchors.right: configButton.left
-            anchors.rightMargin: 7
+            anchors.right: parent.right
+            anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
             spacing: 5
 
@@ -274,19 +283,6 @@ Item {
                 actionEnabled: row.switchEnabled
                 onToggled: row.toggleRequested()
             }
-        }
-
-        ActionCapsule {
-            id: configButton
-            anchors.right: parent.right
-            anchors.rightMargin: 5
-            anchors.verticalCenter: parent.verticalCenter
-            width: 25
-            height: 25
-            color: "transparent"
-            content.text: "\uf054"
-            content.font.pixelSize: 8
-            onClicked: row.configRequested()
         }
     }
 }
