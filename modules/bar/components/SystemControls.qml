@@ -93,5 +93,14 @@ Capsule {
             onClicked: AudioInput.toggleMute()
             onWheel: event => AudioInput.adjustVolume(event.angleDelta.y > 0 ? 0.05 : -0.05)
         }
+
+        ControlSegment {
+            height: parent.height
+            visible: Battery.available
+            label: `${Battery.icon} ${Battery.percentage}`
+            foreground: Battery.low ? Colors.palette.error : Battery.charging ? Colors.palette.secondary : Colors.palette.surfaceText
+            actionEnabled: false
+            acceptedButtons: Qt.NoButton
+        }
     }
 }
