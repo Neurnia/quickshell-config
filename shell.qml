@@ -8,8 +8,12 @@ import Quickshell
 
 ShellRoot {
     Bar {
-        onWifiConfigRequested: wifiConfig.open()
-        onBluetoothConfigRequested: bluetoothConfig.open()
+        onConnectivityConfigRequested: page => {
+            if (page === "bluetooth")
+                bluetoothConfig.open();
+            else
+                wifiConfig.open();
+        }
         onPowerMenuRequested: powerMenu.open()
     }
     BluetoothConfig {

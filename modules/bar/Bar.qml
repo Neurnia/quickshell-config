@@ -5,8 +5,7 @@ import "./components"
 PanelWindow {
     id: root
 
-    signal wifiConfigRequested
-    signal bluetoothConfigRequested
+    signal connectivityConfigRequested(string page)
     signal powerMenuRequested
 
     anchors {
@@ -39,26 +38,15 @@ PanelWindow {
         anchors.rightMargin: 5
     }
 
-    Internet {
-        id: internet
+    Connectivity {
+        id: connectivity
         anchors.right: systemControls.left
         anchors.rightMargin: 5
 
         panel.anchor.window: root
-        panel.anchor.rect.x: internet.x + (internet.width - internet.panel.panelWidth) / 2
+        panel.anchor.rect.x: connectivity.x + (connectivity.width - connectivity.panel.panelWidth) / 2
         panel.anchor.rect.y: root.height
-        onConfigRequested: root.wifiConfigRequested()
-    }
-
-    Bluetooth {
-        id: bluetooth
-        anchors.right: internet.left
-        anchors.rightMargin: 5
-
-        panel.anchor.window: root
-        panel.anchor.rect.x: bluetooth.x + (bluetooth.width - bluetooth.panel.panelWidth) / 2
-        panel.anchor.rect.y: root.height
-        onConfigRequested: root.bluetoothConfigRequested()
+        onConfigRequested: page => root.connectivityConfigRequested(page)
     }
 
     Workspaces {
