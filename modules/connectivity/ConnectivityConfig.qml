@@ -23,6 +23,9 @@ OverlayDialog {
     property int pairingStdoutLength: 0
     property int pairingStderrLength: 0
     readonly property bool inDetail: selectedNetwork !== null || selectedDevice !== null
+    readonly property bool refreshing: currentPage === "wifi"
+        ? Network.busy && Network.actionPurpose === "scan"
+        : BluetoothState.discovering
 
     layerNamespace: "quickshell:connectivity-config"
     cardWidth: 440
@@ -91,11 +94,31 @@ OverlayDialog {
     function refreshCurrentPage(): void {
         if (currentPage === "wifi") {
             Network.rescan();
-        } else if (BluetoothState.discovering) {
-            BluetoothState.stopDiscovery();
-        } else {
+        } else if (!BluetoothState.discovering) {
             BluetoothState.startDiscovery();
         }
+    }
+
+    function pageStatus(): string {
+        if (currentPage === "bluetooth") {
+            if (!BluetoothState.available)
+                return "No adapter detected";
+            if (!BluetoothState.enabled)
+                return "Bluetooth is off";
+            if (BluetoothState.connectedCount === 0)
+                return "No connected devices";
+            return BluetoothState.connectedCount === 1
+                ? "1 connected device"
+                : `${BluetoothState.connectedCount} connected devices`;
+        }
+
+        if (!Network.wifiEnabled)
+            return "Wi-Fi is off";
+        if (Network.connectionType === "wifi")
+            return `Connected to ${Network.connectionName || "Wi-Fi"}`;
+        if (Network.connectionType === "ethernet")
+            return "Ethernet connected · Wi-Fi is on";
+        return "Wi-Fi is on";
     }
 
     function filteredNetworks(): var {
@@ -323,6 +346,14 @@ OverlayDialog {
         }
     }
 
+    Timer {
+        interval: 15000
+        running: root.shown
+            && root.currentPage === "bluetooth"
+            && BluetoothState.discovering
+        onTriggered: BluetoothState.stopDiscovery()
+    }
+
     Column {
         anchors.fill: parent
         anchors.margins: 12
@@ -340,144 +371,228 @@ OverlayDialog {
                 font.weight: Font.DemiBold
             }
 
-            Row {
+            ActionCapsule {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
-
-                ActionCapsule {
-                    anchors.verticalCenter: undefined
-                    width: 30
-                    height: 30
-                    content.text: "\uf293"
-                    color: root.currentPage === "bluetooth"
-                        ? Colors.palette.secondary
-                        : Colors.palette.surfaceVariant
-                    content.color: root.currentPage === "bluetooth"
-                        ? Colors.palette.secondaryText
-                        : Colors.palette.surfaceText
-                    onClicked: root.switchPage("bluetooth")
-                }
-
-                ActionCapsule {
-                    anchors.verticalCenter: undefined
-                    width: 30
-                    height: 30
-                    content.text: "\uf1eb"
-                    color: root.currentPage === "wifi"
-                        ? Colors.palette.secondary
-                        : Colors.palette.surfaceVariant
-                    content.color: root.currentPage === "wifi"
-                        ? Colors.palette.secondaryText
-                        : Colors.palette.surfaceText
-                    onClicked: root.switchPage("wifi")
-                }
-
-                ToggleSwitch {
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: root.currentPage === "wifi"
-                        ? Network.wifiEnabled
-                        : BluetoothState.enabled
-                    actionEnabled: root.currentPage === "wifi"
-                        ? Network.available && !Network.busy
-                        : BluetoothState.available
-                    onToggled: {
-                        if (root.currentPage === "wifi")
-                            Network.toggleWifi();
-                        else
-                            BluetoothState.toggleEnabled();
-                    }
-                }
-
-                ActionCapsule {
-                    anchors.verticalCenter: undefined
-                    width: 30
-                    height: 30
-                    actionEnabled: root.currentPage === "wifi"
-                        ? Network.wifiEnabled && !Network.busy
-                        : BluetoothState.enabled
-                    content.text: root.currentPage === "bluetooth" && BluetoothState.discovering
-                        ? "\uf00d"
-                        : "\uf2f1"
-                    color: root.currentPage === "bluetooth" && BluetoothState.discovering
-                        ? Colors.palette.secondary
-                        : Colors.palette.surfaceVariant
-                    content.color: root.currentPage === "bluetooth" && BluetoothState.discovering
-                        ? Colors.palette.secondaryText
-                        : Colors.palette.surfaceText
-                    onClicked: root.refreshCurrentPage()
-                }
-
-                ActionCapsule {
-                    anchors.verticalCenter: undefined
-                    width: 30
-                    height: 30
-                    content.text: "\uf00d"
-                    color: Colors.palette.surfaceVariant
-                    onClicked: root.close()
-                }
+                width: 30
+                height: 30
+                content.text: "\uf00d"
+                color: Colors.palette.surfaceVariant
+                onClicked: root.close()
             }
         }
 
         Rectangle {
             width: parent.width
-            height: root.inDetail ? 0 : 36
-            visible: !root.inDetail
+            height: 38
             radius: 8
             color: Colors.palette.surfaceVariant
             border.width: 1
-            border.color: searchInput.activeFocus
-                ? Colors.palette.outline
-                : "transparent"
+            border.color: Colors.palette.outlineVariant
 
-            AppText {
-                anchors.left: parent.left
-                anchors.leftMargin: 11
-                anchors.verticalCenter: parent.verticalCenter
-                text: "\uf002"
-                color: Colors.palette.surfaceVariantText
-                font.pixelSize: 10
+            Rectangle {
+                width: parent.width / 2
+                height: parent.height
+                x: root.currentPage === "bluetooth" ? 0 : width
+                radius: parent.radius
+                color: Colors.palette.secondary
+
+                Behavior on x {
+                    NumberAnimation {
+                        duration: 160
+                        easing.type: Easing.OutCubic
+                    }
+                }
             }
 
-            TextInput {
-                id: searchInput
-                anchors.left: parent.left
-                anchors.leftMargin: 34
-                anchors.right: clearSearch.left
-                anchors.rightMargin: 6
-                anchors.verticalCenter: parent.verticalCenter
-                color: Colors.palette.surfaceText
-                selectionColor: Colors.palette.secondary
-                selectedTextColor: Colors.palette.secondaryText
-                font.family: Typography.fontFamily
-                font.pixelSize: 11
-                selectByMouse: true
-                clip: true
-                onTextChanged: root.query = text
+            Item {
+                width: parent.width / 2
+                height: parent.height
+
+                AppText {
+                    anchors.centerIn: parent
+                    text: "\uf293  Bluetooth"
+                    color: root.currentPage === "bluetooth"
+                        ? Colors.palette.secondaryText
+                        : Colors.palette.surfaceVariantText
+                    font.pixelSize: 10
+                    font.weight: root.currentPage === "bluetooth"
+                        ? Font.DemiBold
+                        : Font.Normal
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.switchPage("bluetooth")
+                }
             }
 
-            AppText {
-                anchors.left: searchInput.left
+            Item {
+                x: parent.width / 2
+                width: parent.width / 2
+                height: parent.height
+
+                AppText {
+                    anchors.centerIn: parent
+                    text: `${Network.icon}  Network`
+                    color: root.currentPage === "wifi"
+                        ? Colors.palette.secondaryText
+                        : Colors.palette.surfaceVariantText
+                    font.pixelSize: 10
+                    font.weight: root.currentPage === "wifi"
+                        ? Font.DemiBold
+                        : Font.Normal
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.switchPage("wifi")
+                }
+            }
+        }
+
+        Item {
+            width: parent.width
+            height: root.inDetail ? 0 : 42
+            visible: !root.inDetail
+
+            Column {
+                anchors.left: parent.left
+                anchors.right: stateSwitch.left
+                anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                visible: searchInput.text === ""
-                text: root.currentPage === "wifi" ? "Search networks" : "Search devices"
-                color: Colors.palette.surfaceVariantText
-                font.pixelSize: 10
+                spacing: 2
+
+                AppText {
+                    width: parent.width
+                    text: root.currentPage === "wifi" ? "Wi-Fi" : "Bluetooth"
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    elide: Text.ElideRight
+                }
+
+                AppText {
+                    width: parent.width
+                    text: root.pageStatus()
+                    color: Colors.palette.surfaceVariantText
+                    font.pixelSize: 9
+                    elide: Text.ElideRight
+                }
+            }
+
+            ToggleSwitch {
+                id: stateSwitch
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                checked: root.currentPage === "wifi"
+                    ? Network.wifiEnabled
+                    : BluetoothState.enabled
+                actionEnabled: root.currentPage === "wifi"
+                    ? Network.available && !Network.busy
+                    : BluetoothState.available
+                onToggled: {
+                    if (root.currentPage === "wifi")
+                        Network.toggleWifi();
+                    else
+                        BluetoothState.toggleEnabled();
+                }
+            }
+        }
+
+        Row {
+            width: parent.width
+            height: root.inDetail ? 0 : 36
+            visible: !root.inDetail
+            spacing: 6
+
+            Rectangle {
+                width: parent.width - refreshButton.width - parent.spacing
+                height: parent.height
+                radius: 8
+                color: Colors.palette.surfaceVariant
+                border.width: 1
+                border.color: searchInput.activeFocus
+                    ? Colors.palette.outline
+                    : "transparent"
+
+                AppText {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 11
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "\uf002"
+                    color: Colors.palette.surfaceVariantText
+                    font.pixelSize: 10
+                }
+
+                TextInput {
+                    id: searchInput
+                    anchors.left: parent.left
+                    anchors.leftMargin: 34
+                    anchors.right: clearSearch.left
+                    anchors.rightMargin: 6
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Colors.palette.surfaceText
+                    selectionColor: Colors.palette.secondary
+                    selectedTextColor: Colors.palette.secondaryText
+                    font.family: Typography.fontFamily
+                    font.pixelSize: 11
+                    selectByMouse: true
+                    clip: true
+                    onTextChanged: root.query = text
+                }
+
+                AppText {
+                    anchors.left: searchInput.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: searchInput.text === ""
+                    text: root.currentPage === "wifi" ? "Search networks" : "Search devices"
+                    color: Colors.palette.surfaceVariantText
+                    font.pixelSize: 10
+                }
+
+                ActionCapsule {
+                    id: clearSearch
+                    anchors.right: parent.right
+                    anchors.rightMargin: 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 26
+                    height: 26
+                    visible: searchInput.text !== ""
+                    content.text: "\uf00d"
+                    color: "transparent"
+                    onClicked: {
+                        searchInput.text = "";
+                        searchInput.forceActiveFocus();
+                    }
+                }
             }
 
             ActionCapsule {
-                id: clearSearch
-                anchors.right: parent.right
-                anchors.rightMargin: 4
-                anchors.verticalCenter: parent.verticalCenter
-                width: 26
-                height: 26
-                visible: searchInput.text !== ""
-                content.text: "\uf00d"
-                color: "transparent"
-                onClicked: {
-                    searchInput.text = "";
-                    searchInput.forceActiveFocus();
+                id: refreshButton
+                anchors.verticalCenter: undefined
+                width: 36
+                height: 36
+                actionEnabled: root.currentPage === "wifi"
+                    ? Network.wifiEnabled && !Network.busy
+                    : BluetoothState.enabled && !BluetoothState.discovering
+                content.text: "\uf2f1"
+                color: root.refreshing
+                    ? Colors.palette.secondary
+                    : Colors.palette.surfaceVariant
+                content.color: root.refreshing
+                    ? Colors.palette.secondaryText
+                    : Colors.palette.surfaceText
+                onClicked: root.refreshCurrentPage()
+
+                RotationAnimator {
+                    target: refreshButton.content
+                    from: 0
+                    to: 360
+                    duration: 900
+                    loops: Animation.Infinite
+                    running: root.refreshing
                 }
             }
         }
