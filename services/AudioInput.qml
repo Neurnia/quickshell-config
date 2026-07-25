@@ -8,9 +8,9 @@ Singleton {
     id: root
 
     readonly property PwNode source: Pipewire.defaultAudioSource
-    readonly property real volume: source?.audio.volume ?? 0
-    readonly property bool muted: source?.audio.muted ?? false
-    readonly property int percentage: Math.round(volume * 100)
+    readonly property real volume: endpoint.volume
+    readonly property bool muted: endpoint.muted
+    readonly property int percentage: endpoint.percentage
     readonly property string icon: muted || percentage === 0 ? "\uf131" : "\uf130"
     readonly property bool inUse: {
         if (!Pipewire.ready || !Pipewire.nodes?.values)
@@ -37,36 +37,24 @@ Singleton {
     }
 
     function setVolume(value: real): void {
-        if (!source)
-            return;
-
-        source.audio.volume = Math.max(0, Math.min(1, value));
-        if (source.audio.muted && value > 0)
-            source.audio.muted = false;
+        endpoint.setVolume(value);
     }
 
     function adjustVolume(amount: real): void {
-        setVolume(volume + amount);
+        endpoint.adjustVolume(amount);
     }
 
     function toggleMute(): void {
-        if (source)
-            source.audio.muted = !source.audio.muted;
+        endpoint.toggleMute();
+    }
+
+    AudioEndpoint {
+        id: endpoint
+        node: root.source
+        onChanged: root.inputChanged()
     }
 
     PwObjectTracker {
         objects: Pipewire.nodes.values.filter(node => node && !node.isStream)
-    }
-
-    Connections {
-        target: root.source?.audio ?? null
-
-        function onVolumesChanged(): void {
-            root.inputChanged();
-        }
-
-        function onMutedChanged(): void {
-            root.inputChanged();
-        }
     }
 }
