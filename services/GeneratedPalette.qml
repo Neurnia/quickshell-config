@@ -11,26 +11,7 @@ Singleton {
     property var colors: ({})
     property string mode: ""
     property string seed: ""
-    readonly property var requiredRoles: [
-        "primary",
-        "onPrimary",
-        "primaryContainer",
-        "onPrimaryContainer",
-        "secondary",
-        "onSecondary",
-        "error",
-        "errorContainer",
-        "onErrorContainer",
-        "onSurface",
-        "surfaceVariant",
-        "onSurfaceVariant",
-        "outline",
-        "outlineVariant",
-        "surfaceContainerLowest",
-        "surfaceContainerLow",
-        "surfaceContainerHigh",
-        "surfaceContainerHighest"
-    ]
+    readonly property var requiredRoles: ["primary", "onPrimary", "primaryContainer", "onPrimaryContainer", "secondary", "onSecondary", "secondaryContainer", "onSecondaryContainer", "tertiary", "onTertiary", "tertiaryContainer", "onTertiaryContainer", "error", "onError", "errorContainer", "onErrorContainer", "background", "onBackground", "surface", "onSurface", "surfaceVariant", "onSurfaceVariant", "outline", "outlineVariant", "shadow", "scrim", "inverseSurface", "inverseOnSurface", "inversePrimary", "primaryFixed", "onPrimaryFixed", "primaryFixedDim", "onPrimaryFixedVariant", "secondaryFixed", "onSecondaryFixed", "secondaryFixedDim", "onSecondaryFixedVariant", "tertiaryFixed", "onTertiaryFixed", "tertiaryFixedDim", "onTertiaryFixedVariant", "surfaceDim", "surfaceBright", "surfaceContainerLowest", "surfaceContainerLow", "surfaceContainer", "surfaceContainerHigh", "surfaceContainerHighest"]
 
     property bool available: false
     property string errorMessage: "Generated palette has not been loaded"
