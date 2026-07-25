@@ -10,3 +10,4 @@
 # Special requirements
 
 - Use no SVG or emoji icons in the project. All icons should be Nerd fonts.
+- Frontend and backend should be separated clearly.
