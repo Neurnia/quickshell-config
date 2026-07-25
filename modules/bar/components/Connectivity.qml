@@ -15,7 +15,7 @@ Item {
     signal configRequested(string page)
 
     anchors.verticalCenter: parent.verticalCenter
-    width: 62
+    width: 68
     height: parent.height - 2
 
     function bluetoothSummary(): string {
@@ -78,17 +78,6 @@ Item {
             spacing: 5
 
             Item {
-                width: 18
-                height: parent.height
-
-                AppText {
-                    anchors.centerIn: parent
-                    text: Network.icon
-                    font.pixelSize: 12
-                }
-            }
-
-            Item {
                 width: 27
                 height: parent.height
 
@@ -115,6 +104,26 @@ Item {
                             ? Colors.palette.surfaceText
                             : Colors.palette.surfaceVariantText
                     }
+                }
+            }
+
+            AppText {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 4
+                text: "|"
+                color: Colors.palette.outlineVariant
+                font.pixelSize: 9
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            Item {
+                width: 18
+                height: parent.height
+
+                AppText {
+                    anchors.centerIn: parent
+                    text: Network.icon
+                    font.pixelSize: 12
                 }
             }
         }
