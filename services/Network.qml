@@ -16,13 +16,11 @@ Singleton {
     property string connectionName: ""
     property string device: ""
     property string ipAddress: ""
-    property string vpnName: ""
     property int signalStrength: 0
     property var networks: []
     property var savedNetworks: []
     property bool refreshing: false
     property bool busy: false
-    property string actionName: ""
     property string actionPurpose: ""
     property string connectingName: ""
     property string runnerError: ""
@@ -104,7 +102,6 @@ Singleton {
             return;
 
         busy = true;
-        actionName = wifiEnabled ? "Turning Wi-Fi off" : "Turning Wi-Fi on";
         actionPurpose = "toggle";
         runnerError = "";
         actionRunner.exec(["nmcli", "radio", "wifi", wifiEnabled ? "off" : "on"]);
@@ -115,7 +112,6 @@ Singleton {
             return;
 
         busy = true;
-        actionName = "Scanning";
         actionPurpose = "scan";
         runnerError = "";
         actionRunner.exec(["nmcli", "device", "wifi", "rescan"]);
@@ -130,7 +126,6 @@ Singleton {
             return;
 
         busy = true;
-        actionName = `Connecting to ${network.name}`;
         actionPurpose = "connect";
         connectingName = network.name;
         runnerError = "";
@@ -145,7 +140,6 @@ Singleton {
             return;
 
         busy = true;
-        actionName = `Connecting to ${network.name}`;
         actionPurpose = "credentials";
         connectingName = network.name;
         runnerError = "";
@@ -203,7 +197,6 @@ Singleton {
         connectionName = primary ? primary.connection : "";
         device = primary ? primary.device : "";
         vpnConnected = activeVpn !== "";
-        vpnName = activeVpn;
 
         if (device) {
             ipAddress = "";
@@ -352,7 +345,6 @@ Singleton {
             const errorMessage = root.friendlyError(root.runnerError);
 
             root.busy = false;
-            root.actionName = "";
             root.actionPurpose = "";
             root.connectingName = "";
             root.runnerError = "";
@@ -390,7 +382,6 @@ Singleton {
             root.pendingPassword = "";
             credentialTimeout.stop();
             root.busy = false;
-            root.actionName = "";
             root.actionPurpose = "";
             root.connectingName = "";
             root.runnerError = "";

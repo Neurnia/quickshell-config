@@ -16,20 +16,8 @@ Singleton {
     readonly property var connectedDevices: sortDevices(devices.filter(device => device && device.connected))
     readonly property var pairedDevices: sortDevices(devices.filter(device => device && !device.connected && isKnown(device)))
     readonly property var availableDevices: sortDevices(devices.filter(device => device && !device.connected && !isKnown(device) && hasUsefulName(device)))
-    readonly property var displayItems: buildDisplayItems()
     readonly property int connectedCount: connectedDevices.length
     readonly property string icon: enabled ? "\uf293" : "󰂲"
-    readonly property string label: {
-        if (!available)
-            return "No Bluetooth";
-        if (!enabled)
-            return "Bluetooth off";
-        if (connectedCount === 1)
-            return deviceName(connectedDevices[0]);
-        if (connectedCount > 1)
-            return `${connectedCount} connected`;
-        return "Bluetooth";
-    }
 
     function deviceName(device): string {
         if (!device)
@@ -82,30 +70,6 @@ Singleton {
         return [...source].sort((left, right) => deviceName(left).localeCompare(deviceName(right)));
     }
 
-    function buildDisplayItems(): var {
-        const items = [];
-
-        function appendSection(title, icon, source) {
-            if (source.length === 0)
-                return;
-            items.push({
-                kind: "header",
-                title: title,
-                icon: icon,
-                count: source.length
-            });
-            source.forEach(device => items.push({
-                kind: "device",
-                device: device
-            }));
-        }
-
-        appendSection("Connected", "\uf00c", connectedDevices);
-        appendSection("Paired", "\uf0c1", pairedDevices);
-        appendSection("Available", "\uf002", availableDevices);
-        return items;
-    }
-
     function deviceStatus(device): string {
         if (!device)
             return "Unavailable";
@@ -143,11 +107,6 @@ Singleton {
         }
 
         // New devices are paired by ConnectivityConfig's interactive BlueZ agent.
-    }
-
-    function forgetDevice(device): void {
-        if (device && isKnown(device) && !deviceBusy(device))
-            device.forget();
     }
 
     function toggleEnabled(): void {
