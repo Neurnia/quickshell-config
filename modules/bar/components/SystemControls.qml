@@ -96,6 +96,17 @@ Capsule {
 
         ControlSegment {
             height: parent.height
+            visible: ScreenSharing.active
+            label: ScreenSharing.icon
+            emphasized: true
+            foreground: Colors.palette.errorContainerText
+            activeBackground: Colors.palette.errorContainer
+            actionEnabled: false
+            acceptedButtons: Qt.NoButton
+        }
+
+        ControlSegment {
+            height: parent.height
             visible: Battery.available
             label: `${Battery.icon} ${Battery.percentage}`
             emphasized: Battery.low || Battery.powerConnected
