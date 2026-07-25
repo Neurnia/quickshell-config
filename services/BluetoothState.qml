@@ -106,7 +106,7 @@ Singleton {
             return;
         }
 
-        // New devices are paired by ConnectivityConfig's interactive BlueZ agent.
+        // New devices are paired by BluetoothPairing's interactive BlueZ agent.
     }
 
     function toggleEnabled(): void {

@@ -11,17 +11,10 @@ OverlayDialog {
     property string currentPage: "wifi"
     property string query: ""
     property var selectedNetwork: null
-    property var selectedDevice: null
+    readonly property var selectedDevice: BluetoothPairing.device
     property string passwordText: ""
     property bool passwordVisible: false
     property string errorMessage: ""
-    property string pairingMode: "waiting"
-    property string pairingMessage: ""
-    property string pairingCode: ""
-    property string pairingInputText: ""
-    property string pairingOutputBuffer: ""
-    property int pairingStdoutLength: 0
-    property int pairingStderrLength: 0
     readonly property bool inDetail: selectedNetwork !== null || selectedDevice !== null
     readonly property bool refreshing: currentPage === "wifi"
         ? Network.busy && Network.actionPurpose === "scan"
@@ -74,19 +67,11 @@ OverlayDialog {
     }
 
     function showList(): void {
-        if (pairingRunner.running)
-            pairingRunner.signal(15);
-        if (selectedDevice?.pairing)
-            selectedDevice.cancelPair();
+        BluetoothPairing.cancel();
         selectedNetwork = null;
-        selectedDevice = null;
         passwordText = "";
         passwordVisible = false;
         errorMessage = "";
-        pairingMode = "waiting";
-        pairingMessage = "";
-        pairingCode = "";
-        pairingInputText = "";
         if (shown)
             takeFocus();
     }
@@ -180,81 +165,7 @@ OverlayDialog {
             BluetoothState.toggleDevice(device);
             return;
         }
-        beginPairing(device);
-    }
-
-    function beginPairing(device): void {
-        if (!device || pairingRunner.running)
-            return;
-        selectedDevice = device;
-        pairingMode = "waiting";
-        pairingMessage = "Waiting for the device to respond…";
-        pairingCode = "";
-        pairingInputText = "";
-        errorMessage = "";
-        pairingOutputBuffer = "";
-        pairingStdoutLength = 0;
-        pairingStderrLength = 0;
-        pairingRunner.exec(["bluetoothctl", "--agent", "KeyboardDisplay", "--timeout", "90", "pair", device.address]);
-    }
-
-    function cleanPairingOutput(output: string): string {
-        return output.replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "").replace(/\r/g, "");
-    }
-
-    function handlePairingOutput(output: string): void {
-        pairingOutputBuffer = (pairingOutputBuffer + cleanPairingOutput(output)).slice(-600);
-        const cleaned = pairingOutputBuffer;
-        let match = cleaned.match(/Confirm passkey\s+([0-9]+)/i);
-        if (match) {
-            pairingMode = "confirm";
-            pairingCode = match[1];
-            pairingMessage = "Check that this code matches the device.";
-            pairingOutputBuffer = "";
-            return;
-        }
-        match = cleaned.match(/Passkey:\s*([0-9]+)/i);
-        if (match) {
-            pairingCode = match[1];
-            pairingMessage = "Enter this passkey on the device.";
-        }
-        if (/Enter (?:PIN code|passkey)/i.test(cleaned)) {
-            pairingMode = "input";
-            pairingMessage = "Enter the PIN or passkey shown by the device.";
-            pairingOutputBuffer = "";
-            Qt.callLater(() => contentLoader.item?.focusInput());
-        }
-        if (/Pairing successful/i.test(cleaned)) {
-            pairingMode = "waiting";
-            pairingMessage = "Pairing complete. Connecting…";
-            pairingOutputBuffer = "";
-        }
-        const failure = cleaned.match(/Failed to pair:\s*(.+)/i)
-            || cleaned.match(/AuthenticationFailed/i)
-            || cleaned.match(/AuthenticationCanceled/i)
-            || cleaned.match(/ConnectionAttemptFailed/i);
-        if (failure) {
-            pairingMode = "failed";
-            errorMessage = failure[1] || "The device rejected the pairing request.";
-            pairingOutputBuffer = "";
-        }
-    }
-
-    function answerPairing(answer: string): void {
-        if (!pairingRunner.running)
-            return;
-        pairingRunner.write(answer + "\n");
-        pairingOutputBuffer = "";
-        pairingMode = "waiting";
-        pairingMessage = "Waiting for pairing to finish…";
-        pairingInputText = "";
-        takeFocus();
-    }
-
-    function submitPairingInput(): void {
-        const answer = pairingInputText.trim();
-        if (answer)
-            answerPairing(answer);
+        BluetoothPairing.begin(device);
     }
 
     IpcHandler {
@@ -310,39 +221,17 @@ OverlayDialog {
         }
     }
 
-    Process {
-        id: pairingRunner
-        stdinEnabled: true
+    Connections {
+        target: BluetoothPairing
 
-        stdout: StdioCollector {
-            waitForEnd: false
-            onDataChanged: {
-                const chunk = text.slice(root.pairingStdoutLength);
-                root.pairingStdoutLength = text.length;
-                root.handlePairingOutput(chunk);
-            }
-        }
-
-        stderr: StdioCollector {
-            waitForEnd: false
-            onDataChanged: {
-                const chunk = text.slice(root.pairingStderrLength);
-                root.pairingStderrLength = text.length;
-                root.handlePairingOutput(chunk);
-            }
-        }
-
-        onExited: exitCode => {
-            if (!root.selectedDevice)
-                return;
-            if (exitCode === 0) {
-                root.selectedDevice.trusted = true;
-                root.selectedDevice.connect();
+        function onCompleted(): void {
+            if (root.shown)
                 root.showList();
-            } else if (!root.errorMessage && root.shown) {
-                root.pairingMode = "failed";
-                root.errorMessage = "Pairing was cancelled or could not be completed.";
-            }
+        }
+
+        function onModeChanged(): void {
+            if (root.shown && BluetoothPairing.mode === "input")
+                Qt.callLater(() => contentLoader.item?.focusInput());
         }
     }
 
@@ -999,8 +888,8 @@ OverlayDialog {
 
                 AppText {
                     width: parent.width
-                    text: root.errorMessage || root.pairingMessage
-                    color: root.errorMessage
+                text: BluetoothPairing.errorMessage || BluetoothPairing.message
+                color: BluetoothPairing.errorMessage
                         ? Colors.palette.error
                         : Colors.palette.surfaceVariantText
                     font.pixelSize: 10
@@ -1010,9 +899,9 @@ OverlayDialog {
 
                 AppText {
                     width: parent.width
-                    height: root.pairingCode ? 52 : 0
-                    visible: root.pairingCode !== ""
-                    text: root.pairingCode
+                height: BluetoothPairing.code ? 52 : 0
+                visible: BluetoothPairing.code !== ""
+                text: BluetoothPairing.code
                     font.pixelSize: 28
                     font.weight: Font.DemiBold
                     font.letterSpacing: 3
@@ -1021,8 +910,8 @@ OverlayDialog {
 
                 Rectangle {
                     width: parent.width
-                    height: root.pairingMode === "input" ? 42 : 0
-                    visible: root.pairingMode === "input"
+                height: BluetoothPairing.mode === "input" ? 42 : 0
+                visible: BluetoothPairing.mode === "input"
                     radius: 8
                     color: Colors.palette.surfaceVariant
 
@@ -1041,8 +930,7 @@ OverlayDialog {
                         inputMethodHints: Qt.ImhDigitsOnly
                         selectByMouse: true
                         clip: true
-                        onTextChanged: root.pairingInputText = text
-                        onAccepted: root.submitPairingInput()
+                    onAccepted: BluetoothPairing.answer(text)
                     }
                 }
 
@@ -1053,9 +941,9 @@ OverlayDialog {
 
                     ActionCapsule {
                         anchors.verticalCenter: undefined
-                        width: root.pairingMode === "confirm"
-                            ? (parent.width - parent.spacing * 2) / 3
-                            : root.pairingMode === "input"
+                    width: BluetoothPairing.mode === "confirm"
+                        ? (parent.width - parent.spacing * 2) / 3
+                        : BluetoothPairing.mode === "input"
                                 ? (parent.width - parent.spacing) / 2
                                 : parent.width
                         height: parent.height
@@ -1068,24 +956,24 @@ OverlayDialog {
                         anchors.verticalCenter: undefined
                         width: (parent.width - parent.spacing * 2) / 3
                         height: parent.height
-                        visible: root.pairingMode === "confirm"
+                    visible: BluetoothPairing.mode === "confirm"
                         content.text: "\uf00d"
                         color: Colors.palette.surfaceVariant
                         onClicked: {
-                            root.answerPairing("no");
+                        BluetoothPairing.answer("no");
                             root.showList();
                         }
                     }
 
                     ActionCapsule {
-                        readonly property bool acceptable: root.pairingMode === "confirm"
-                            || (root.pairingMode === "input" && root.pairingInputText.trim() !== "")
+                    readonly property bool acceptable: BluetoothPairing.mode === "confirm"
+                        || (BluetoothPairing.mode === "input" && pairingInput.text.trim() !== "")
                         anchors.verticalCenter: undefined
-                        width: root.pairingMode === "confirm"
+                    width: BluetoothPairing.mode === "confirm"
                             ? (parent.width - parent.spacing * 2) / 3
                             : (parent.width - parent.spacing) / 2
                         height: parent.height
-                        visible: root.pairingMode === "confirm" || root.pairingMode === "input"
+                    visible: BluetoothPairing.mode === "confirm" || BluetoothPairing.mode === "input"
                         actionEnabled: acceptable
                         content.text: "\uf00c"
                         color: acceptable
@@ -1095,10 +983,10 @@ OverlayDialog {
                             ? Colors.palette.secondaryText
                             : Colors.palette.surfaceVariantText
                         onClicked: {
-                            if (root.pairingMode === "confirm")
-                                root.answerPairing("yes");
-                            else
-                                root.submitPairingInput();
+                        if (BluetoothPairing.mode === "confirm")
+                            BluetoothPairing.answer("yes");
+                        else
+                            BluetoothPairing.answer(pairingInput.text);
                         }
                     }
                 }
