@@ -1,6 +1,5 @@
 import "modules/bar"
-import "modules/bluetooth"
-import "modules/network"
+import "modules/connectivity"
 import "modules/osd"
 import "modules/power"
 
@@ -8,19 +7,11 @@ import Quickshell
 
 ShellRoot {
     Bar {
-        onConnectivityConfigRequested: page => {
-            if (page === "bluetooth")
-                bluetoothConfig.open();
-            else
-                wifiConfig.open();
-        }
+        onConnectivityConfigRequested: page => connectivityConfig.open(page)
         onPowerMenuRequested: powerMenu.open()
     }
-    BluetoothConfig {
-        id: bluetoothConfig
-    }
-    WifiConfig {
-        id: wifiConfig
+    ConnectivityConfig {
+        id: connectivityConfig
     }
     PowerMenu {
         id: powerMenu

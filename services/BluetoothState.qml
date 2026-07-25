@@ -142,7 +142,7 @@ Singleton {
             return;
         }
 
-        // New devices are paired by BluetoothConfig's interactive BlueZ agent.
+        // New devices are paired by ConnectivityConfig's interactive BlueZ agent.
     }
 
     function forgetDevice(device): void {
