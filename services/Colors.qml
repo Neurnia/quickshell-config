@@ -12,7 +12,7 @@ Singleton {
     readonly property bool usingGeneratedPalette: GeneratedPalette.available
     readonly property string paletteMode: usingGeneratedPalette ? GeneratedPalette.mode : "dark"
     readonly property string paletteSource: usingGeneratedPalette ? "generated" : "fallback"
-    property real surfaceOpacity: 0.5
+    property real surfaceOpacity: 0.75
 
     FallbackPalette {
         id: fallbackPalette
