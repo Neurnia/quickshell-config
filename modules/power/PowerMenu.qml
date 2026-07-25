@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell.Io
 import qs.components
 import qs.services
+import "./components"
 
 OverlayDialog {
     id: root
@@ -66,21 +67,22 @@ OverlayDialog {
         }
     }
 
-    function open(): void {
+    function reset(): void {
         cancelHold(false);
         completionTimer.stop();
         completingIndex = -1;
         pendingCompletion = null;
-        selectedIndex = 0;
         showHoldHint = false;
+    }
+
+    function open(): void {
+        reset();
+        selectedIndex = 0;
         shown = true;
     }
 
     function close(): void {
-        cancelHold(false);
-        completionTimer.stop();
-        completingIndex = -1;
-        pendingCompletion = null;
+        reset();
         shown = false;
     }
 
@@ -246,212 +248,36 @@ OverlayDialog {
             Repeater {
                 model: SessionActions.actions
 
-                ActionCapsule {
-                    id: actionButton
-
+                PowerActionButton {
                     required property var modelData
                     required property int index
-
-                    readonly property bool selected: root.selectedIndex === index
-                    readonly property bool holding: root.holdingIndex === index || root.completingIndex === index
-                    readonly property bool activelyHolding: root.holdingIndex === index
-                    property real holdOffset: activelyHolding ? 1 : 0
-                    property real holdScale: activelyHolding ? 0.985 : 1
-                    property real feedbackOffset: 0
-                    property real feedbackScale: 1
-                    readonly property color progressColor: modelData.id === "shutdown" ? Colors.palette.error : Colors.palette.primary
 
                     anchors.verticalCenter: undefined
                     width: (actionGrid.width - actionGrid.spacing) / 2
                     height: 82
-                    radius: 10
-                    clip: true
-                    content.text: ""
-                    color: Colors.palette.surfaceVariant
-                    border.width: selected ? 2 : 1
-                    border.color: selected ? Colors.palette.outline : "transparent"
-                    onHoveredChanged: {
-                        if (hovered)
-                            root.selectedIndex = actionButton.index;
+                    action: modelData
+                    actionIndex: index
+                    selected: root.selectedIndex === index
+                    holding: root.holdingIndex === index || root.completingIndex === index
+                    activelyHolding: root.holdingIndex === index
+                    holdProgress: root.holdProgress
+                    feedbackSource: root
+                    onSelectionRequested: targetIndex => root.selectedIndex = targetIndex
+                    onActionPressed: targetIndex => {
+                        if (modelData.dangerous)
+                            root.beginAction(targetIndex);
                     }
-                    onPressed: {
-                        if (actionButton.modelData.dangerous)
-                            root.beginAction(actionButton.index);
+                    onActionClicked: targetIndex => {
+                        if (!modelData.dangerous)
+                            root.beginAction(targetIndex);
                     }
-                    onClicked: {
-                        if (!actionButton.modelData.dangerous)
-                            root.beginAction(actionButton.index);
-                    }
-                    onReleased: {
-                        if (root.holdingIndex === actionButton.index)
+                    onActionReleased: targetIndex => {
+                        if (root.holdingIndex === targetIndex)
                             root.cancelHold(true);
                     }
-                    onCanceled: {
-                        if (root.holdingIndex === actionButton.index)
+                    onActionCanceled: targetIndex => {
+                        if (root.holdingIndex === targetIndex)
                             root.cancelHold(false);
-                    }
-                    transform: [
-                        Translate {
-                            y: actionButton.holdOffset + actionButton.feedbackOffset
-                        },
-                        Scale {
-                            origin.x: actionButton.width / 2
-                            origin.y: actionButton.height / 2
-                            xScale: actionButton.holdScale * actionButton.feedbackScale
-                            yScale: actionButton.holdScale * actionButton.feedbackScale
-                        }
-                    ]
-
-                    Behavior on holdOffset {
-                        NumberAnimation {
-                            duration: 90
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    Behavior on holdScale {
-                        NumberAnimation {
-                            duration: 90
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    Item {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: actionButton.holding ? parent.width * root.holdProgress : 0
-                        clip: true
-
-                        Rectangle {
-                            id: progressFill
-
-                            width: actionButton.width
-                            height: actionButton.height
-                            radius: actionButton.radius
-                            color: actionButton.progressColor
-                            opacity: 0.38
-                        }
-                    }
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 5
-
-                        AppText {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: actionButton.modelData.icon
-                            color: actionButton.modelData.id === "shutdown" && (actionButton.selected || actionButton.holding) ? Colors.palette.error : Colors.palette.surfaceText
-                            font.pixelSize: 22
-                        }
-
-                        AppText {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: actionButton.modelData.label
-                            color: Colors.palette.surfaceText
-                            font.pixelSize: 11
-                            font.weight: Font.DemiBold
-                        }
-
-                        AppText {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: actionButton.modelData.dangerous ? "Hold to confirm" : actionButton.modelData.description
-                            color: Colors.palette.surfaceVariantText
-                            font.pixelSize: 8
-                        }
-                    }
-
-                    Connections {
-                        target: root
-
-                        function onHoldFeedbackRequested(targetIndex: int, kind: string): void {
-                            if (targetIndex !== actionButton.index)
-                                return;
-
-                            cancelFeedback.stop();
-                            completeFeedback.stop();
-                            actionButton.feedbackOffset = 0;
-                            actionButton.feedbackScale = 1;
-
-                            if (kind === "cancel")
-                                cancelFeedback.restart();
-                            else if (kind === "complete")
-                                completeFeedback.restart();
-                        }
-                    }
-
-                    SequentialAnimation {
-                        id: cancelFeedback
-
-                        NumberAnimation {
-                            target: actionButton
-                            property: "feedbackOffset"
-                            to: -2.5
-                            duration: 65
-                            easing.type: Easing.OutCubic
-                        }
-                        ParallelAnimation {
-                            NumberAnimation {
-                                target: actionButton
-                                property: "feedbackOffset"
-                                to: 0
-                                duration: 150
-                                easing.type: Easing.OutBack
-                            }
-                            SequentialAnimation {
-                                NumberAnimation {
-                                    target: actionButton
-                                    property: "feedbackScale"
-                                    to: 1.012
-                                    duration: 80
-                                    easing.type: Easing.OutCubic
-                                }
-                                NumberAnimation {
-                                    target: actionButton
-                                    property: "feedbackScale"
-                                    to: 1
-                                    duration: 70
-                                    easing.type: Easing.InOutCubic
-                                }
-                            }
-                        }
-                    }
-
-                    SequentialAnimation {
-                        id: completeFeedback
-
-                        ParallelAnimation {
-                            NumberAnimation {
-                                target: actionButton
-                                property: "feedbackOffset"
-                                to: -1
-                                duration: 80
-                                easing.type: Easing.OutCubic
-                            }
-                            NumberAnimation {
-                                target: actionButton
-                                property: "feedbackScale"
-                                to: 1.018
-                                duration: 80
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                        ParallelAnimation {
-                            NumberAnimation {
-                                target: actionButton
-                                property: "feedbackOffset"
-                                to: 0
-                                duration: 85
-                                easing.type: Easing.InOutCubic
-                            }
-                            NumberAnimation {
-                                target: actionButton
-                                property: "feedbackScale"
-                                to: 1
-                                duration: 85
-                                easing.type: Easing.InOutCubic
-                            }
-                        }
                     }
                 }
             }
