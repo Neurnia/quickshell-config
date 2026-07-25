@@ -33,27 +33,15 @@ PanelWindow {
         anchors.rightMargin: 5
     }
 
-    Volume {
-        id: volume
+    SystemControls {
+        id: systemControls
         anchors.right: clock.left
-        anchors.rightMargin: 5
-    }
-
-    Microphone {
-        id: microphone
-        anchors.right: volume.left
-        anchors.rightMargin: 5
-    }
-
-    Brightness {
-        id: brightness
-        anchors.right: microphone.left
         anchors.rightMargin: 5
     }
 
     Internet {
         id: internet
-        anchors.right: brightness.left
+        anchors.right: systemControls.left
         anchors.rightMargin: 5
 
         panel.anchor.window: root
