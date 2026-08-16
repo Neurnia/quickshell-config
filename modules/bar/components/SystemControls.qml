@@ -1,9 +1,12 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import qs.components
 import qs.services
 
 Capsule {
     id: root
+
+    property alias panel: notificationPanel
 
     width: controls.implicitWidth + 8
     clip: true
@@ -25,8 +28,9 @@ Capsule {
         property bool emphasized: false
         property bool actionEnabled: true
         property int acceptedButtons: Qt.LeftButton
+        property string toolTip: ""
 
-        signal clicked
+        signal clicked(var event)
         signal wheel(var event)
 
         implicitWidth: segmentText.implicitWidth + 8
@@ -65,8 +69,32 @@ Capsule {
             enabled: segment.actionEnabled
             acceptedButtons: segment.acceptedButtons
             cursorShape: segment.acceptedButtons === Qt.NoButton ? Qt.ArrowCursor : Qt.PointingHandCursor
-            onClicked: segment.clicked()
+            onClicked: event => segment.clicked(event)
             onWheel: event => segment.wheel(event)
+        }
+
+        Controls.ToolTip {
+            id: segmentToolTip
+
+            parent: segment
+            visible: segment.toolTip.length > 0 && hoverHandler.hovered
+            text: segment.toolTip
+            delay: 700
+            timeout: 5000
+            y: segment.height + 5
+            padding: 7
+
+            contentItem: AppText {
+                text: segmentToolTip.text
+                font.pixelSize: 8
+            }
+
+            background: Rectangle {
+                radius: 6
+                color: Colors.palette.surfaceContainerLowest
+                border.color: Colors.palette.outline
+                border.width: 1
+            }
         }
     }
 
@@ -129,5 +157,35 @@ Capsule {
             actionEnabled: false
             acceptedButtons: Qt.NoButton
         }
+
+        ControlSegment {
+            id: notificationSegment
+
+            height: parent.height
+            implicitWidth: 20
+            label: MakoState.doNotDisturb ? "\uf1f6" : "\uf0f3"
+            toolTip: "Left: do not disturb  ·  Middle: dismiss all  ·  Right: history"
+            emphasized: MakoState.doNotDisturb || notificationPanel.visible
+            foreground: MakoState.doNotDisturb
+                ? Colors.palette.primaryContainerText
+                : Colors.palette.surfaceText
+            activeBackground: MakoState.doNotDisturb
+                ? Colors.palette.primaryContainer
+                : Colors.palette.surfaceContainerHigh
+            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+            onClicked: event => {
+                if (event.button === Qt.LeftButton) {
+                    MakoState.toggleDoNotDisturb();
+                } else if (event.button === Qt.MiddleButton) {
+                    MakoState.dismissAll();
+                } else if (event.button === Qt.RightButton) {
+                    notificationPanel.visible = !notificationPanel.visible;
+                }
+            }
+        }
+    }
+
+    NotificationHistory {
+        id: notificationPanel
     }
 }

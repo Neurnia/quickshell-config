@@ -36,6 +36,10 @@ PanelWindow {
         id: systemControls
         anchors.right: clock.left
         anchors.rightMargin: 5
+
+        panel.anchor.window: root
+        panel.anchor.rect.x: systemControls.x + systemControls.width - systemControls.panel.panelWidth
+        panel.anchor.rect.y: root.height
     }
 
     Connectivity {
