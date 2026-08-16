@@ -50,8 +50,13 @@ PanelWindow {
     }
 
     Tray {
+        id: tray
         anchors.right: connectivity.left
         anchors.rightMargin: 5
+
+        panel.anchor.window: root
+        panel.anchor.rect.x: tray.x + (tray.width - tray.panel.panelWidth) / 2
+        panel.anchor.rect.y: root.height
     }
 
     Workspaces {
