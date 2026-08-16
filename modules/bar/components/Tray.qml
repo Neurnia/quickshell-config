@@ -80,7 +80,7 @@ Capsule {
         id: panelWindow
 
         readonly property int panelWidth: trayItems.implicitWidth + 16
-        readonly property int panelHeight: 38
+        readonly property int panelHeight: trayItems.implicitHeight + 14
 
         implicitWidth: panelWidth
         implicitHeight: panelHeight
@@ -96,12 +96,13 @@ Capsule {
             border.color: Colors.palette.outline
             border.width: 1
 
-            Row {
+            Grid {
                 id: trayItems
 
                 anchors.centerIn: parent
-                height: parent.height - 10
-                spacing: 3
+                columns: Math.max(1, Math.min(3, trayRepeater.count))
+                rowSpacing: 3
+                columnSpacing: 3
 
                 Repeater {
                     id: trayRepeater
@@ -115,7 +116,7 @@ Capsule {
                     delegate: TrayItemButton {
                         required property SystemTrayItem modelData
 
-                        height: trayItems.height
+                        height: 24
                         trayEntry: modelData
                     }
                 }
