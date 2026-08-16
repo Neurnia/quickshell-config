@@ -6,26 +6,74 @@ import Quickshell.Services.SystemTray
 import qs.components
 import qs.services
 
-Item {
+Capsule {
     id: root
 
     property alias panel: panelWindow
     property bool menuOpen: false
 
-    anchors.verticalCenter: parent.verticalCenter
-    visible: trayRepeater.count > 0
-    width: 30
-    height: parent.height - 2
+    visible: TrayState.inputMethod !== null || trayRepeater.count > 0
+    width: capsuleItems.implicitWidth + 8
+    clip: true
+    content.text: ""
+    border.color: menuOpen ? Colors.palette.outline : "transparent"
 
-    ActionCapsule {
-        id: statusButton
+    Row {
+        id: capsuleItems
 
-        anchors.fill: parent
-        anchors.verticalCenter: undefined
-        content.text: "\uf187"
-        content.font.pixelSize: 11
-        border.color: root.menuOpen || hovered ? Colors.palette.outline : "transparent"
-        onClicked: root.menuOpen = !root.menuOpen
+        anchors.centerIn: parent
+        height: parent.height - 4
+        spacing: 2
+
+        Item {
+            visible: trayRepeater.count > 0
+            width: 20
+            height: parent.height
+
+            Rectangle {
+                anchors.fill: parent
+                radius: height / 2
+                color: arrowMouse.containsMouse || root.menuOpen
+                    ? Colors.palette.surfaceContainerHigh
+                    : "transparent"
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+                }
+            }
+
+            AppText {
+                anchors.centerIn: parent
+                text: root.menuOpen ? "\uf077" : "\uf078"
+                font.pixelSize: 9
+            }
+
+            MouseArea {
+                id: arrowMouse
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.menuOpen = !root.menuOpen
+            }
+        }
+
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: TrayState.inputMethod !== null && trayRepeater.count > 0
+            width: 1
+            height: 12
+            color: Colors.palette.outlineVariant
+            opacity: 0.7
+        }
+
+        TrayItemButton {
+            visible: TrayState.inputMethod !== null
+            height: parent.height
+            trayEntry: TrayState.inputMethod
+        }
     }
 
     PopupWindow {
@@ -58,81 +106,91 @@ Item {
                     id: trayRepeater
 
                     model: TrayState.items
+                    onCountChanged: {
+                        if (count === 0)
+                            root.menuOpen = false;
+                    }
 
-                    delegate: Item {
-                        id: trayItem
-
+                    delegate: TrayItemButton {
                         required property SystemTrayItem modelData
 
-                        width: 24
                         height: trayItems.height
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: height / 2
-                            color: mouseArea.containsMouse || menuAnchor.visible
-                                ? Colors.palette.surfaceContainerHigh
-                                : "transparent"
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 120
-                                }
-                            }
-                        }
-
-                        Image {
-                            anchors.centerIn: parent
-                            width: 18
-                            height: 18
-                            source: trayItem.modelData.icon
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                        }
-
-                        MouseArea {
-                            id: mouseArea
-
-                            anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-
-                            onClicked: event => {
-                                if (event.button === Qt.RightButton || (event.button === Qt.LeftButton && trayItem.modelData.onlyMenu)) {
-                                    if (trayItem.modelData.hasMenu)
-                                        menuAnchor.open();
-                                    return;
-                                }
-
-                                if (event.button === Qt.MiddleButton) {
-                                    TrayState.secondaryActivate(trayItem.modelData);
-                                    return;
-                                }
-
-                                TrayState.activate(trayItem.modelData);
-                            }
-
-                            onWheel: event => {
-                                const horizontal = Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y);
-                                const delta = horizontal ? event.angleDelta.x : event.angleDelta.y;
-                                TrayState.scroll(trayItem.modelData, delta, horizontal);
-                                event.accepted = true;
-                            }
-                        }
-
-                        QsMenuAnchor {
-                            id: menuAnchor
-
-                            menu: trayItem.modelData.menu
-                            anchor.item: trayItem
-                            anchor.edges: Edges.Bottom
-                            anchor.gravity: Edges.Bottom
-                            anchor.adjustment: PopupAdjustment.FlipX | PopupAdjustment.SlideX | PopupAdjustment.SlideY
-                        }
+                        trayEntry: modelData
                     }
                 }
             }
+        }
+    }
+
+    component TrayItemButton: Item {
+        id: trayItem
+
+        required property SystemTrayItem trayEntry
+
+        width: 24
+
+        Rectangle {
+            anchors.fill: parent
+            radius: height / 2
+            color: itemMouse.containsMouse || menuAnchor.visible
+                ? Colors.palette.surfaceContainerHigh
+                : "transparent"
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 120
+                }
+            }
+        }
+
+        Image {
+            anchors.centerIn: parent
+            width: 18
+            height: 18
+            source: trayItem.trayEntry?.icon ?? ""
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+        }
+
+        MouseArea {
+            id: itemMouse
+
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+
+            onClicked: event => {
+                if (event.button === Qt.RightButton || (event.button === Qt.LeftButton && trayItem.trayEntry.onlyMenu)) {
+                    if (trayItem.trayEntry.hasMenu)
+                        menuAnchor.open();
+                    return;
+                }
+
+                if (event.button === Qt.MiddleButton) {
+                    TrayState.secondaryActivate(trayItem.trayEntry);
+                    return;
+                }
+
+                TrayState.activate(trayItem.trayEntry);
+            }
+
+            onWheel: event => {
+                const horizontal = Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y);
+                const delta = horizontal ? event.angleDelta.x : event.angleDelta.y;
+                TrayState.scroll(trayItem.trayEntry, delta, horizontal);
+                event.accepted = true;
+            }
+        }
+
+        QsMenuAnchor {
+            id: menuAnchor
+
+            menu: trayItem.trayEntry?.menu ?? null
+            anchor.item: trayItem
+            anchor.edges: Edges.Bottom
+            anchor.gravity: Edges.Bottom
+            anchor.adjustment: PopupAdjustment.FlipX | PopupAdjustment.SlideX | PopupAdjustment.SlideY
         }
     }
 }
