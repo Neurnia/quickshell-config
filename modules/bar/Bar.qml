@@ -49,6 +49,11 @@ PanelWindow {
         onConfigRequested: page => root.connectivityConfigRequested(page)
     }
 
+    Tray {
+        anchors.right: connectivity.left
+        anchors.rightMargin: 5
+    }
+
     Workspaces {
         height: parent.height
         anchors.left: parent.left
