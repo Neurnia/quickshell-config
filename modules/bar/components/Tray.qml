@@ -10,7 +10,7 @@ Capsule {
     id: root
 
     property alias panel: panelWindow
-    property bool menuOpen: false
+    readonly property bool menuOpen: panelWindow.visible
 
     visible: TrayState.inputMethod !== null || trayRepeater.count > 0
     width: capsuleItems.implicitWidth + 8
@@ -56,7 +56,7 @@ Capsule {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.menuOpen = !root.menuOpen
+                onClicked: panelWindow.visible = !panelWindow.visible
             }
         }
 
@@ -84,7 +84,8 @@ Capsule {
 
         implicitWidth: panelWidth
         implicitHeight: panelHeight
-        visible: root.menuOpen && trayRepeater.count > 0
+        visible: false
+        grabFocus: true
         color: "transparent"
 
         Rectangle {
@@ -108,7 +109,7 @@ Capsule {
                     model: TrayState.items
                     onCountChanged: {
                         if (count === 0)
-                            root.menuOpen = false;
+                            panelWindow.visible = false;
                     }
 
                     delegate: TrayItemButton {
