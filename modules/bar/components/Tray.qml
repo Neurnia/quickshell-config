@@ -11,8 +11,6 @@ Item {
 
     property alias panel: panelWindow
     property bool menuOpen: false
-    property int openMenuCount: 0
-    readonly property bool hovered: statusButton.hovered || panelWindow.hovered || openMenuCount > 0
 
     anchors.verticalCenter: parent.verticalCenter
     visible: trayRepeater.count > 0
@@ -26,47 +24,35 @@ Item {
         anchors.verticalCenter: undefined
         content.text: "\uf187"
         content.font.pixelSize: 11
-        border.color: root.menuOpen || root.hovered ? Colors.palette.outline : "transparent"
-        onHoveredChanged: {
-            if (hovered)
-                root.menuOpen = true;
-        }
+        border.color: root.menuOpen || hovered ? Colors.palette.outline : "transparent"
         onClicked: root.menuOpen = !root.menuOpen
-    }
-
-    Timer {
-        interval: 400
-        running: root.menuOpen && !root.hovered
-        onTriggered: root.menuOpen = false
     }
 
     PopupWindow {
         id: panelWindow
 
-        readonly property bool hovered: panelHover.hovered
-        readonly property int panelWidth: trayItems.implicitWidth + 12
-        readonly property int panelHeight: 40
+        readonly property int panelWidth: trayItems.implicitWidth + 16
+        readonly property int panelHeight: 38
 
         implicitWidth: panelWidth
         implicitHeight: panelHeight
         visible: root.menuOpen && trayRepeater.count > 0
         color: "transparent"
 
-        Capsule {
+        Rectangle {
             anchors.fill: parent
-            radius: height / 2
+            radius: 8
+            antialiasing: true
             color: Colors.palette.surfaceContainerLowest
-
-            HoverHandler {
-                id: panelHover
-            }
+            border.color: Colors.palette.outline
+            border.width: 1
 
             Row {
                 id: trayItems
 
                 anchors.centerIn: parent
-                height: parent.height - 8
-                spacing: 2
+                height: parent.height - 10
+                spacing: 3
 
                 Repeater {
                     id: trayRepeater
@@ -78,7 +64,7 @@ Item {
 
                         required property SystemTrayItem modelData
 
-                        width: 28
+                        width: 24
                         height: trayItems.height
 
                         Rectangle {
@@ -97,8 +83,8 @@ Item {
 
                         Image {
                             anchors.centerIn: parent
-                            width: 20
-                            height: 20
+                            width: 16
+                            height: 16
                             source: trayItem.modelData.icon
                             fillMode: Image.PreserveAspectFit
                             smooth: true
@@ -143,8 +129,6 @@ Item {
                             anchor.edges: Edges.Bottom
                             anchor.gravity: Edges.Bottom
                             anchor.adjustment: PopupAdjustment.FlipX | PopupAdjustment.SlideX | PopupAdjustment.SlideY
-                            onOpened: root.openMenuCount += 1
-                            onClosed: root.openMenuCount = Math.max(0, root.openMenuCount - 1)
                         }
                     }
                 }
