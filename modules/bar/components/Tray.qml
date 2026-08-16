@@ -83,8 +83,8 @@ Item {
 
                         Image {
                             anchors.centerIn: parent
-                            width: 16
-                            height: 16
+                            width: 18
+                            height: 18
                             source: trayItem.modelData.icon
                             fillMode: Image.PreserveAspectFit
                             smooth: true
