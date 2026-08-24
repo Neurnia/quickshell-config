@@ -7,14 +7,34 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property int maximum: Number(maximumView.text().trim()) || 1
-    readonly property int current: Number(currentView.text().trim()) || 0
+    property int maximum: 1
+    property int current: 0
     readonly property int percentage: Math.round(current / maximum * 100)
     readonly property string icon: percentage < 34 ? "󰖔" : percentage < 67 ? "󰖕" : "󰖙"
+
+    function refresh(): void {
+        if (!reader.running)
+            reader.running = true;
+    }
+
+    function update(output: string): void {
+        const fields = output.split("\n")[0].split(",");
+        if (fields.length < 5)
+            return;
+
+        const nextCurrent = Number(fields[2]);
+        const nextMaximum = Number(fields[4]);
+        if (isNaN(nextCurrent) || isNaN(nextMaximum) || nextMaximum <= 0)
+            return;
+
+        current = nextCurrent;
+        maximum = nextMaximum;
+    }
 
     function adjust(amount: int): void {
         setter.exec([
             "brightnessctl",
+            "--class=backlight",
             "--min-value=1",
             "set",
             amount > 0 ? "5%+" : "5%-"
@@ -22,35 +42,30 @@ Singleton {
         refreshTimer.restart();
     }
 
-    FileView {
-        id: maximumView
-        path: "/sys/class/backlight/intel_backlight/max_brightness"
-        preload: true
-    }
-
-    FileView {
-        id: currentView
-        path: "/sys/class/backlight/intel_backlight/brightness"
-        preload: true
-        watchChanges: true
-        onFileChanged: reload()
+    Process {
+        id: reader
+        command: ["brightnessctl", "--class=backlight", "--machine-readable", "info"]
+        stdout: StdioCollector {
+            onStreamFinished: root.update(text.trim())
+        }
     }
 
     Process {
         id: setter
-        onExited: currentView.reload()
+        onExited: root.refresh()
     }
 
     Timer {
         interval: 1000
         running: true
         repeat: true
-        onTriggered: currentView.reload()
+        triggeredOnStart: true
+        onTriggered: root.refresh()
     }
 
     Timer {
         id: refreshTimer
         interval: 100
-        onTriggered: currentView.reload()
+        onTriggered: root.refresh()
     }
 }
