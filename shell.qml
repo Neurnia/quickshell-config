@@ -1,6 +1,7 @@
 //@ pragma UseQApplication
 
 import "modules/bar"
+import "modules/clipboard"
 import "modules/connectivity"
 import "modules/osd"
 import "modules/power"
@@ -19,4 +20,5 @@ ShellRoot {
         id: powerMenu
     }
     VolumeOsd {}
+    ClipboardPicker {}
 }
