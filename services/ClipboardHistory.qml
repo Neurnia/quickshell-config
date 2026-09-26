@@ -65,6 +65,29 @@ Singleton {
         return result;
     }
 
+    function decodePreviewText(data, utf8Text: string): string {
+        if (utf8Text === "")
+            return utf8Text;
+        const bytes = new Uint8Array(data);
+        if (bytes.length % 2 !== 0)
+            return utf8Text;
+
+        const hasBom = bytes[0] === 0xff && bytes[1] === 0xfe;
+        let prefix = "";
+        for (let i = 0; i < Math.min(bytes.length, 16); i += 2)
+            prefix += String.fromCharCode(bytes[i] | (bytes[i + 1] << 8));
+
+        // Browser URL/title payloads use UTF-16LE, often without a BOM.
+        // Recognize their URL prefix instead of guessing all text encodings.
+        if (!hasBom && !/^https?:\/\//.test(prefix))
+            return utf8Text;
+
+        let text = "";
+        for (let i = hasBom ? 2 : 0; i < bytes.length; i += 2)
+            text += String.fromCharCode(bytes[i] | (bytes[i + 1] << 8));
+        return text;
+    }
+
     function preview(entry): void {
         generation++;
         requestedEntry = entry;
@@ -142,8 +165,9 @@ wl-copy < "$file"`, "clipboard-restore", entry.id];
             } else if (entry.mime) {
                 root.imageSource = `data:${entry.mime};base64,${previewOutput.text.trim()}`;
             } else {
-                root.textTruncated = previewOutput.text.length > 32768;
-                root.previewText = previewOutput.text.slice(0, 32768);
+                const text = root.decodePreviewText(previewOutput.data, previewOutput.text);
+                root.textTruncated = text.length > 32768;
+                root.previewText = text.slice(0, 32768);
             }
         }
     }
