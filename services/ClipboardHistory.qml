@@ -4,12 +4,17 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 
 Singleton {
     id: root
 
     property var entries: []
     property bool active: false
+    property int session: 0
+    property var pasteTarget: null
+    readonly property var terminalApps: DesktopEntries.applications.values.filter(
+        app => app.categories.includes("TerminalEmulator"))
     property int generation: 0
     property var requestedEntry: null
     property string imageSource: ""
@@ -24,11 +29,15 @@ Singleton {
     signal restored
 
     function open(): void {
+        pasteDelay.stop();
+        session++;
+        pasteTarget = Hyprland.activeToplevel;
         active = true;
         refresh();
     }
 
     function close(): void {
+        pasteDelay.stop();
         active = false;
         entries = [];
         preview(null);
@@ -120,7 +129,38 @@ file=$(mktemp)
 trap 'rm -f -- "$file"' EXIT
 cliphist decode "$1" > "$file"
 wl-copy < "$file"`, "clipboard-restore", entry.id];
+        restorer.session = session;
         restorer.running = true;
+    }
+
+    function paste(): void {
+        if (!pasteTarget || !Hyprland.toplevels.values.includes(pasteTarget)) {
+            notifyError("The destination window is no longer available.");
+            return;
+        }
+        const window = `"address:0x${pasteTarget.address}"`;
+        const app = DesktopEntries.heuristicLookup(pasteTarget.lastIpcObject.class);
+        const modifiers = terminalApps.includes(app) ? "CTRL + SHIFT" : "CTRL";
+        paster.command = ["hyprctl", "eval",
+            `hl.dispatch(hl.dsp.focus({window = ${window}}))
+hl.dispatch(hl.dsp.send_shortcut({mods = "${modifiers}", key = "V", window = ${window}}))`];
+        paster.running = true;
+    }
+
+    Timer {
+        id: pasteDelay
+        // Let the layer surface unmap and release its exclusive keyboard focus.
+        interval: 100
+        onTriggered: root.paste()
+    }
+
+    Process {
+        id: paster
+        stderr: StdioCollector {}
+        onExited: (code, status) => {
+            if (code !== 0 || status !== 0)
+                root.notifyError(`Could not paste into the destination window (exit ${code}).`);
+        }
     }
 
     Timer {
@@ -174,11 +214,15 @@ wl-copy < "$file"`, "clipboard-restore", entry.id];
 
     Process {
         id: restorer
+        property int session: -1
         stderr: StdioCollector {}
         onExited: (code, status) => {
-            if (code === 0 && status === 0)
+            if (session !== root.session || !root.active)
+                return;
+            if (code === 0 && status === 0) {
                 root.restored();
-            else
+                pasteDelay.restart();
+            } else
                 root.notifyError(`Could not restore this entry (exit ${code}).`);
         }
     }

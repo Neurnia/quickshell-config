@@ -24,8 +24,8 @@ OverlayDialog {
     function open(): void {
         search.text = "";
         selectedIndex = 0;
-        shown = true;
         ClipboardHistory.open();
+        shown = true;
         Qt.callLater(() => search.forceActiveFocus());
     }
 
@@ -289,7 +289,7 @@ OverlayDialog {
         AppText {
             width: parent.width
             height: 24
-            text: ClipboardHistory.restoring ? "Restoring clipboard…" : "↑ ↓ / Ctrl J K  navigate    Enter  copy    Ctrl R  refresh    Esc  close"
+            text: ClipboardHistory.restoring ? "Restoring clipboard…" : "↑ ↓ / Ctrl J K  navigate    Enter  paste    Ctrl R  refresh    Esc  close"
             color: Colors.palette.surfaceVariantText
             font.pixelSize: 10
             verticalAlignment: Text.AlignVCenter
