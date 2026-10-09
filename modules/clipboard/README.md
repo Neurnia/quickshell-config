@@ -17,9 +17,9 @@ Bind `quickshell ipc call clipboard toggle` to a compositor shortcut. The
 
 Type to filter history, then use arrow keys or `Ctrl+J` / `Ctrl+K` to select an
 entry. Press `Enter` or double-click to copy its original contents to the clipboard
-and close the dialog. A notification confirms the copy with an image label or a
-text summary of up to 30 characters. Paste in the destination application using
-its paste shortcut. `Ctrl+R` refreshes history; `Esc` or a click outside closes
+and close the dialog. A notification confirms the copy with an image thumbnail
+or a text summary of up to 30 characters. Paste in the destination application
+using its paste shortcut. `Ctrl+R` refreshes history; `Esc` or a click outside closes
 the dialog without copying.
 
 Images fit the preview pane while retaining their aspect ratio. Previews stay

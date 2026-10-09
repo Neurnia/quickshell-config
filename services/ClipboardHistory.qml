@@ -121,8 +121,12 @@ Singleton {
 file=$(mktemp)
 trap 'rm -f -- "$file"' EXIT
 cliphist decode "$1" > "$file"
-wl-copy < "$file"`, "clipboard-restore", entry.id];
-        restorer.message = copyMessage(entry);
+wl-copy < "$file"
+notification=(notify-send --urgency=low)
+if [[ -n "$2" ]]; then
+    notification+=(--icon="$file")
+fi
+"\${notification[@]}" "剪贴板" "$3"`, "clipboard-restore", entry.id, entry.mime, copyMessage(entry)];
         restorer.session = session;
         restorer.running = true;
     }
@@ -189,16 +193,14 @@ wl-copy < "$file"`, "clipboard-restore", entry.id];
     Process {
         id: restorer
         property int session: -1
-        property string message: ""
         stderr: StdioCollector {}
         onExited: (code, status) => {
             if (session !== root.session || !root.active)
                 return;
-            if (code === 0 && status === 0) {
+            if (code === 0 && status === 0)
                 root.restored();
-                Quickshell.execDetached(["notify-send", "--urgency=low", "剪贴板", message]);
-            } else
-                root.notifyError(`Could not restore this entry (exit ${code}).`);
+            else
+                root.notifyError(`Could not copy this entry or send its notification (exit ${code}).`);
         }
     }
 }
