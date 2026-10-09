@@ -110,7 +110,7 @@ OverlayDialog {
             AppText {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uf0ea  Clipboard"
+                text: "\uf0ea  Clipboard history"
                 font.pixelSize: 16
                 font.weight: Font.DemiBold
             }
@@ -289,7 +289,7 @@ OverlayDialog {
         AppText {
             width: parent.width
             height: 24
-            text: ClipboardHistory.restoring ? "Restoring clipboard…" : "↑ ↓ / Ctrl J K  navigate    Enter  paste    Ctrl R  refresh    Esc  close"
+            text: ClipboardHistory.restoring ? "Restoring clipboard…" : "↑ ↓ / Ctrl J K  navigate    Enter  copy to clipboard    Ctrl R  refresh    Esc  close"
             color: Colors.palette.surfaceVariantText
             font.pixelSize: 10
             verticalAlignment: Text.AlignVCenter
